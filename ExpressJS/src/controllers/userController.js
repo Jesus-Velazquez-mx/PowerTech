@@ -15,7 +15,22 @@ function validarLogin(credenciales) {
   return errores;
 }
 
-// POST /login
+function validarRegistro(usuario) {
+  const errores = [];
+  const { nombre, email, contrasena } = usuario;
+
+  if (!nombre || !nombre.trim()) errores.push("El nombre es obligatorio");
+  if (!email || !email.trim()) errores.push("El correo electrónico es obligatorio");
+  if (!contrasena || !contrasena.trim()) errores.push("La contraseña es obligatoria");
+  
+  if (nombre && nombre.length > 50) errores.push("El nombre no debe superar 50 caracteres");
+  if (email && email.length > 120) errores.push("El correo no debe superar 120 caracteres");
+  if (contrasena && contrasena.length > 255) errores.push("La contraseña es demasiado larga");
+
+  return errores;
+}
+
+/* Para hacer el login*/
 function login(req, res) {
   if (connection) {
     const { email, contrasena } = req.body;
@@ -48,6 +63,46 @@ function login(req, res) {
           });
         }
       }
+    });
+  }
+}
+
+/* Para crear un usuario */
+function crear(req, res) {
+  if (connection) {
+    const { nombre, email, contrasena } = req.body;
+    // Validar campos obligatorios y longitud
+    const errores = validarRegistro(req.body);
+    if (errores.length > 0) {
+      return res.status(400).json({ error: true, mensaje: "Errores de validación", detalles: errores });
+    }
+    // Verificar si el nombre o el email ya existen
+    const sqlCheck = 'SELECT nombre, email FROM USUARIOS WHERE nombre = ? OR email = ?';
+    connection.query(sqlCheck, [nombre, email], (err, results) => {
+      if (err) return res.status(500).json(err);
+      if (results.length > 0) {
+        // Identificar cuál es el duplicado
+        const existeNombre = results.some(u => u.nombre === nombre);
+        const existeEmail = results.some(u => u.email === email);
+        let mensaje = "";
+        if (existeNombre && existeEmail) mensaje = "El nombre de usuario y el correo ya están registrados";
+        else if (existeNombre) mensaje = "El nombre de usuario ya está en uso";
+        else if (existeEmail) mensaje = "El correo electrónico ya está registrado";
+        return res.status(400).json({
+          error: true,
+          mensaje: mensaje
+        });
+      }
+      // Si no hay duplicados, procedemos a insertar
+      const sqlInsert = 'INSERT INTO USUARIOS SET ?';
+      connection.query(sqlInsert, { nombre, email, contrasena }, (err, rows) => {
+        if (err) return res.status(500).json(err);
+        res.json({
+          error: false,
+          data: rows,
+          mensaje: "Usuario registrado con éxito"
+        });
+      });
     });
   }
 }
@@ -109,5 +164,6 @@ function obtenerDatosRelacionados(req, res) {
 
 module.exports = {
   login,
-  obtenerDatosRelacionados
+  obtenerDatosRelacionados,
+  crear
 };

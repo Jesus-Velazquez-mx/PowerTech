@@ -27,6 +27,10 @@
       <v-btn to="/login">
         <h1>LoginTest</h1>
       </v-btn>
+
+      <v-btn to="/signup">
+        <h1>SignupTest</h1>
+      </v-btn>
     </v-bottom-navigation>
   </div>
 </template>

@@ -16,6 +16,7 @@
           <v-form ref="formRef" v-model="esValido" @submit.prevent="login">
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1">Correo Electrónico</div>
             <!--Rounded es un border-radius para hacerlo ovalado-->
+            <!-- Email -->
             <v-text-field
               v-model="email"
               placeholder="nombre@ejemplo.com"
@@ -26,6 +27,7 @@
               required
             />
 
+            <!-- Contraseña -->
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2">Contraseña</div>
             <v-text-field
               v-model="contrasena"
@@ -38,12 +40,14 @@
               required
             />
 
+            <!-- Link para la contraseña olvidada -->
             <div class="text-left mb-6">
               <router-link to="/recover" class="text-caption font-weight-bold text-decoration-none" style="color: #3b6fb6;">
                 ¿Olvidaste tu contraseña?
               </router-link>
             </div>
 
+            <!-- Botón para iniciar sesión -->
             <v-btn
               block
               size="large"
@@ -57,6 +61,7 @@
             </v-btn>
           </v-form>
 
+          <!-- Hipervínculo para el registro-->
           <div class="text-center mt-4">
             <span class="text-caption text-grey-darken-1">¿Aún no tienes una cuenta?</span>
             <br />
@@ -94,15 +99,10 @@ const email = ref("");
 const contrasena = ref("");
 
 const reglas = {
-  email: [
-    v => !!v || "El correo electrónico es obligatorio",
-    v => /.+@.+\..+/.test(v) || "El correo debe ser válido"
-  ],
-  contrasena: [
-    v => !!v || "La contraseña es obligatoria",
-    v => (v && v.length <= 60) || "La contraseña no debe superar 60 caracteres"
-  ]
+  email: [v => !!v || "El correo es obligatorio", v => /.+@.+\..+/.test(v) || "Correo no válido"],
+  contrasena: [v => !!v || "La contraseña es obligatoria", v => v.length >= 6 || "Mínimo 6 caracteres"]
 };
+
 
 const login = async () => {
   const { valid } = await formRef.value.validate();

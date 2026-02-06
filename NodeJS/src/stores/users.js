@@ -22,6 +22,18 @@ export const useUserStore = defineStore("user", () => {
       .finally(() => (loading.value = false));
   };
 
+  // POST /user
+  const agregarUsuario = ({ datos, onComplete, onError }) => {
+  loading.value = true;
+  axios
+    .post(`${API_BASE}/user`, datos)
+    .then((res) => {
+      if (onComplete) onComplete(res);
+    })
+    .catch(onError)
+    .finally(() => (loading.value = false));
+};
+
   // GET /user/:id/perfil
   const obtenerDatosRelacionados = ({ id, onComplete, onError }) => {
     loading.value = true;
@@ -48,5 +60,6 @@ export const useUserStore = defineStore("user", () => {
     login,
     obtenerDatosRelacionados,
     logout,
+    agregarUsuario
   };
 });
