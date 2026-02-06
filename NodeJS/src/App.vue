@@ -1,6 +1,11 @@
 <template>
-  <router-view />
+  <v-app> <div class="main"></div>
+  <!-- Contenido de cada vista -->
+  <div class="page">
+    <router-view />
+  </div>
 
+  <!-- Toast (notificaciones) -->
   <div class="toast-container">
     <v-alert
       v-if="toast"
@@ -12,11 +17,16 @@
       {{ toast.message }}
     </v-alert>
   </div>
+
+  <!-- Menú global inferior -->
+  <Menu />
+  </v-app>
 </template>
 
 <script setup>
 import { storeToRefs } from "pinia";
 import { useNotifyStore } from "@/stores/notify";
+import Menu from "@/components/Menu.vue";
 
 const notify = useNotifyStore();
 const { toast } = storeToRefs(notify);
@@ -31,10 +41,14 @@ const { toast } = storeToRefs(notify);
   z-index: 9999;
 }
 
+/* Para que el menú fijo no tape el contenido */
+.page {
+  padding-bottom: 90px; /* ajusta si tu menú es más alto */
+}
+
 /* Fondo azul bajito para TODAS las vistas */
 body,
 .v-application {
   background-color: #e3f2fd !important; /* azul muy suave */
 }
-
 </style>
