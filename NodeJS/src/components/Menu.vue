@@ -12,16 +12,20 @@
         <v-icon>mdi-home-outline</v-icon>
       </v-btn>
 
-      <v-btn to="/notificaciones">
+      <v-btn to="/notifications">
         <v-icon>mdi-bell-outline</v-icon>
       </v-btn>
 
-      <v-btn to="/mensajes">
+      <v-btn to="/messages">
         <v-icon>mdi-email-outline</v-icon>
       </v-btn>
 
-      <v-btn to="/apps">
+      <v-btn to="/others">
         <v-icon>mdi-dots-grid</v-icon>
+      </v-btn>
+
+      <v-btn to="/login">
+        <h1>LoginTest</h1>
       </v-btn>
     </v-bottom-navigation>
   </div>

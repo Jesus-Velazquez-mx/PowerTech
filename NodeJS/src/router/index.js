@@ -2,9 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // Vistas
 import HomeView from '@/views/HomeView.vue'
-import AddView from '@/views/AddView.vue'
-import DetailView from '@/views/DetailView.vue'
-import AllView from '@/views/AllView.vue'
+import Login from '@/views/Login.vue'
+import Signup from '@/views/Signup.vue'
+import Messages from '@/views/Messages.vue'
+import Notifications from '@/views/Notifications.vue'
+import Others from '@/views/Others.vue' 
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,21 +17,31 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/addBoardgame',
-      name: 'addBoardgame',
-      component: AddView,
+      path: '/login',
+      name: 'login',
+      component: Login,
     },
-    {
-      path: '/boardgame/:id',
-      name: 'boardgameId',
-      component: DetailView,
-      props: true,
+      {
+      path: '/signup',
+      name: 'signup',
+      component: Signup,
     },
-    {
-      path: '/boardgame',
-      name: 'boardgame',
-      component: AllView,
-    }
+      {
+      path: '/messages',
+      name: 'messages',
+      component: Messages,
+    },
+      {
+      path: '/notifications',
+      name: 'notifications',
+      component: Notifications,
+    },
+      {
+      path: '/others',
+      name: 'others',
+      component: Others,
+    },
+    
     
   ],
 })
