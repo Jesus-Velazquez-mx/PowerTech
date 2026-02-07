@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 // Vistas
-import HomeView from '@/views/HomeView.vue'
+import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import Messages from '@/views/Messages.vue'
 import Notifications from '@/views/Notifications.vue'
 import Others from '@/views/Others.vue' 
+import Buildings from '@/views/Buildings.vue'
+import Reports from '@/views/Reports.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,7 +16,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: Home,
     },
     {
       path: '/login',
@@ -40,6 +42,16 @@ const router = createRouter({
       path: '/others',
       name: 'others',
       component: Others,
+    },
+       {
+      path: '/buildings',
+      name: 'buildings',
+      component: Buildings,
+    },
+       {
+      path: '/reports',
+      name: 'reports',
+      component: Reports,
     },
     
     

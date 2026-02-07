@@ -1,3 +1,3 @@
 <template>
-test home
+    test buildings
 </template>

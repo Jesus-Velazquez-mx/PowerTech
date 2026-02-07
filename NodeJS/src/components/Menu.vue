@@ -61,7 +61,7 @@
   min-width: 0;
 }
 
-/* opcional: “tap” más cómodo en móvil */
+/* “tap” más cómodo en móvil */
 .menu-bar :deep(.v-btn__content){
   padding: 0 18px;
 }
