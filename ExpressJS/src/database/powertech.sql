@@ -169,5 +169,8 @@ CREATE TABLE ALARMAS (
 INSERT INTO USUARIOS (nombre, email, contrasena)
 VALUES ('test', 'test@gmail.com', 'test');
 
+INSERT INTO USUARIOS (nombre, email, contrasena)
+VALUES ('test2', 'test2@gmail.com', 'test1234');    --OTRO USUARIO DE PRUEBA :)
+
 select * from usuarios
 
