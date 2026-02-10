@@ -4,7 +4,7 @@
       <h1 class="text-h3 font-weight-bold mb-2" style="color: #3b6fb6;">Bienvenido</h1>
       <p class="text-subtitle-1 text-grey-darken-1">
         ¿Qué quieres hacer el día de hoy{{ nombreFormateado ? `, ${nombreFormateado}` : '' }}?
-      </p>    
+      </p>
     </div>
 
     <v-card class="pa-6 rounded-xl mb-6 d-flex align-center justify-space-between" elevation="1">
@@ -23,8 +23,8 @@
     <v-row>
       <v-col cols="5">
         <!-- Reportes -->
-        <v-card 
-          class="pa-4 rounded-xl mb-4 text-center d-flex flex-column align-center" 
+        <v-card
+          class="pa-4 rounded-xl mb-4 text-center d-flex flex-column align-center"
           elevation="1"
           ripple
           tag="router-link"
@@ -35,8 +35,8 @@
         </v-card>
 
         <!-- Edificios -->
-        <v-card 
-          class="pa-4 rounded-xl text-center d-flex flex-column align-center" 
+        <v-card
+          class="pa-4 rounded-xl text-center d-flex flex-column align-center"
           elevation="1"
           ripple
           tag="router-link"
@@ -46,7 +46,7 @@
           <span class="text-caption font-weight-bold">Mis edificios</span>
         </v-card>
       </v-col>
-    
+
       <!-- Advertencias (se harán reactivas cuando se implemente lo de las notificaciones)-->
       <v-col cols="7">
         <v-card class="pa-6 rounded-xl fill-height text-center d-flex flex-column align-center justify-center" elevation="1">
@@ -72,7 +72,7 @@ const ahorro = ref(null);
 const nombreFormateado = computed(() => {
   // Obtenemos el nombre desde el objeto usuario en el store
   const nombreCompleto = userStore.usuario?.nombre;
-  
+
   if (!nombreCompleto) return "";
   // Solamente el primer nombre
   const primerNombre = nombreCompleto.split(" ")[0];
@@ -96,7 +96,9 @@ const ahorroPrediccion = computed(() => {
 /* Efecto para las tarjetas */
 .v-card {
   transition: transform 0.2s ease;
-  border: 1px solid rgba(0,0,0,0.05) !important;
+  box-shadow: none !important;
+  border: none !important;
+  background-color: #f8f9fb;
 }
 
 .v-card:active {

@@ -51,7 +51,9 @@ const ahorroPrediccion = computed(() => {
 /* Efecto para las tarjetas */
 .v-card {
   transition: transform 0.2s ease;
-  border: 1px solid rgba(0,0,0,0.05) !important;
+  box-shadow: none !important;
+  border: none !important;
+  background-color: #f8f9fb;
 }
 
 .v-card:active {

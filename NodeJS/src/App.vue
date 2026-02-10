@@ -49,6 +49,6 @@ const { toast } = storeToRefs(notify);
 /* Fondo azul bajito para TODAS las vistas */
 body,
 .v-application {
-  background-color: #e3f2fd !important; /* azul muy suave */
+  background-color: #ffffff
 }
 </style>
