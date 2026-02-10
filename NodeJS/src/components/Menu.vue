@@ -16,8 +16,8 @@
         <v-icon>mdi-bell-outline</v-icon>
       </v-btn>
 
-      <v-btn to="/messages">
-        <v-icon>mdi-email-outline</v-icon>
+      <v-btn to="/monitoring">
+        <v-icon>mdi-laptop</v-icon>
       </v-btn>
 
       <v-btn to="/others">

@@ -1,15 +1,15 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
     <div class="text-center mb-10">
-      <h1 class="text-h3 font-weight-bold mb-2" style="color: #3b6fb6;">Mis mensajes</h1>
+      <h1 class="text-h3 font-weight-bold mb-2" style="color: #3b6fb6;">Monitoreo</h1>
       <p class="text-subtitle-1 text-grey-darken-1">
-        Test para mensajes. Usuario logueado: {{ nombreFormateado ? ` ${nombreFormateado}` : '' }}
+        Test para Monitoreo. Usuario logueado: {{ nombreFormateado ? ` ${nombreFormateado}` : '' }}
       </p>    
     </div>
 
     <v-card class="pa-6 rounded-xl mb-6 d-flex align-center justify-space-between" elevation="1">
       <div>
-        <div class="text-subtitle-2 font-weight-bold text-grey-darken-2 mb-1">Test de la pestaña "Mensajes"</div>
+        <div class="text-subtitle-2 font-weight-bold text-grey-darken-2 mb-1">Test de la pestaña "Monitoreo"</div>
       </div>
     </v-card>
   </v-container>

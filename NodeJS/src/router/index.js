@@ -4,7 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
-import Messages from '@/views/Messages.vue'
+import Monitoring from '@/views/Monitoring.vue'
 import Notifications from '@/views/Notifications.vue'
 import Others from '@/views/Others.vue' 
 import Buildings from '@/views/Buildings.vue'
@@ -29,9 +29,9 @@ const router = createRouter({
       component: Signup,
     },
       {
-      path: '/messages',
-      name: 'messages',
-      component: Messages,
+      path: '/monitoring',
+      name: 'monitoring',
+      component: Monitoring,
     },
       {
       path: '/notifications',
