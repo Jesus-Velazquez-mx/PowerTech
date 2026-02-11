@@ -6,14 +6,12 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas
-const boardgamesRoutes = require('./routes/boardgamesRoutes');
-const favoritesRoutes = require('./routes/favoritesRoutes');
 const userRoutes = require('./routes/userRoutes')
+const alarmRoutes = require('./routes/alarmRoutes')
 
 /* Middleware de rutas */
-app.use('/boardgame', boardgamesRoutes);
-app.use('/favorites', favoritesRoutes);
 app.use('/user', userRoutes);
+app.use('/alarm', alarmRoutes)
 
 
 const PORT = 3000;
