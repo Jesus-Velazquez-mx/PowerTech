@@ -36,11 +36,25 @@ export const useBuildingStore = defineStore("building", () => {
       .finally(() => (loading.value = false));
   };
 
+  // DELETE /building/:id
+  // Borra un edificio de la base de datos
+  const eliminarEdificio = ({ id, onComplete, onError }) => {
+  loading.value = true;
+  axios
+    .delete(`${API_BASE}/${id}`)
+    .then((res) => {
+      if (onComplete) onComplete(res);
+    })
+    .catch(onError)
+    .finally(() => (loading.value = false));
+};
+
   return {
     edificios,
     edificio,
     loading,
     listarEdificiosPorUsuario,
     agregarEdificio,
+    eliminarEdificio
   };
 });

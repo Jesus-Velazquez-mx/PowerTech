@@ -10,4 +10,7 @@ router.get('/user/:id', buildingController.listarPorUsuario);
 // Para registrar un nuevo edificio
 router.post('/', buildingController.crear);
 
+// DELETE /building/:id
+router.delete('/:id', buildingController.eliminar);
+
 module.exports = router;

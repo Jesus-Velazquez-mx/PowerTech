@@ -87,7 +87,33 @@ function crear(req, res) {
   }
 }
 
+function eliminar(req, res) {
+  if (connection) {
+    const { id } = req.params; // codigoEdificio
+
+    // Eliminar primero las alarmas (debido a la restricción RESTRICT)
+    const sqlAlarmas = 'DELETE FROM ALARMAS WHERE codigoEdificio = ?';
+    connection.query(sqlAlarmas, [id], (err) => {
+      if (err) return res.status(500).json(err);
+      // Una vez limpio, eliminamos el edificio
+      // Las salas, dispositivos y sensores se borrarán automáticamente por el CASCADE
+      const sqlEdificio = 'DELETE FROM EDIFICIOS WHERE codigoEdificio = ?';
+      
+      connection.query(sqlEdificio, [id], (err, result) => {
+        if (err) return res.status(500).json(err);
+
+        res.json({
+          error: false,
+          mensaje: "Edificio y sus dependencias eliminados con éxito",
+          data: result
+        });
+      });
+    });
+  }
+}
+
 module.exports = {
   listarPorUsuario,
-  crear
+  crear,
+  eliminar
 };

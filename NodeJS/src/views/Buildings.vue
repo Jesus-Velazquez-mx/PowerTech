@@ -1,4 +1,3 @@
-<!-- FUNCIONAL, PERO HAY QUE CAMBIARLE EL DISEÑO PARA QUE SE VEA ACORDE AL PROTOTIPO-->
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
     <div class="text-center mb-10">
@@ -24,38 +23,43 @@
     </v-card>
 
     <div v-else>
-      <!-- Cartas con todos los edificios del usuario -->
       <v-card 
         v-for="item in edificios" 
         :key="item.codigoEdificio"
         class="building-card pa-5 rounded-xl mb-4 d-flex align-center justify-space-between" 
         elevation="1"
         hover
+        @click="verSalas(item.codigoEdificio)"
       >
-      <!-- Ícono de edificio para las tarjetas (usa "v-avatar" para que la imagen sea circular)-->
         <div class="d-flex align-center overflow-hidden">
           <v-avatar color="blue-lighten-5" size="56" class="mr-4 flex-shrink-0">
             <v-icon color="blue-darken-2">mdi-office-building</v-icon>
           </v-avatar>
-          <!-- Código del edificio -->
           <div class="overflow-hidden">
             <div class="text-overline font-weight-bold text-blue-darken-2" style="line-height: 1;">
               {{ item.codigoEdificio }}
             </div>
-            <!-- Nombre -->
             <h2 class="text-h6 font-weight-bold text-truncate">{{ item.nombreEdificio }}</h2>
-            <!-- Horario-->
             <div class="text-caption text-grey-darken-1 d-flex align-center">
               <v-icon size="14" class="mr-1">mdi-clock-outline</v-icon>
               Horario: {{ formatearHora(item.horarioEntrada) }} - {{ formatearHora(item.horarioSalida) }}
             </div>
           </div>
         </div>
-        <v-btn icon="mdi-chevron-right" variant="text" color="grey-darken-1"></v-btn>
+
+        <div class="d-flex align-center">
+          <v-btn 
+            icon="mdi-delete-outline" 
+            variant="text" 
+            color="red-lighten-1"
+            class="mr-2"
+            @click.stop="confirmarEliminar(item.codigoEdificio)"
+          ></v-btn>
+          <v-btn icon="mdi-chevron-right" variant="text" color="grey-darken-1"></v-btn>
+        </div>
       </v-card>
     </div>
 
-    <!-- Botón que abre el modal de agregar edificio -->
     <div class="fab-container">
       <v-btn
         color="blue-darken-2"
@@ -67,16 +71,13 @@
     </div>
 
     <v-dialog v-model="dialogoVisible" max-width="500px" persistent>
-      <!-- Carta con el formulario de agregar edificio -->
       <v-card class="rounded-xl pa-4">
-        <!-- Título -->
         <v-card-title class="text-h5 font-weight-bold text-center" style="color: #3b6fb6;">
           Nuevo Edificio
         </v-card-title>
         
         <v-card-text>
           <v-form ref="formRef" v-model="formValido">
-            <!-- Código -->
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1">Código del Edificio</div>
             <v-text-field
               v-model="nuevoEdificio.codigoEdificio"
@@ -88,7 +89,6 @@
               required
             />
 
-            <!-- Nombre -->
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2">Nombre del Edificio</div>
             <v-text-field
               v-model="nuevoEdificio.nombreEdificio"
@@ -100,7 +100,6 @@
               required
             />
 
-            <!-- Hora de entrada y de salida-->
             <v-row>
               <v-col cols="6">
                 <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2">Entrada</div>
@@ -132,9 +131,7 @@
 
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <!-- Botón cancelar -->
           <v-btn variant="text" color="grey" @click="cerrarModal" class="text-none">Cancelar</v-btn>
-          <!-- Botón guardar -->          
           <v-btn 
             color="blue-darken-2" 
             class="text-none rounded-pill px-6" 
@@ -153,11 +150,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
 import { useUserStore } from "@/stores/users";
 import { useBuildingStore } from "@/stores/buildings";
 import { useNotifyStore } from "@/stores/notify";
 
+const router = useRouter();
 const userStore = useUserStore();
 const buildingStore = useBuildingStore();
 const notify = useNotifyStore();
@@ -197,7 +196,7 @@ const reglas = {
 /* Para formatear la hora */
 const formatearHora = (hora) => {
   if (!hora) return "00:00";
-  return hora.substring(0, 5);
+  return hora.substring(0, 5); // Recorta HH:mm:ss a HH:mm
 };
 
 /* Para formatear el nombre de usuario (se quitará si se quita el mensaje de bienvenida) */
@@ -208,6 +207,11 @@ const nombreFormateado = computed(() => {
   return primerNombre.charAt(0).toUpperCase() + primerNombre.slice(1).toLowerCase();
 });
 
+/* Función para navegar al listado de rooms */
+const verSalas = (codigoEdificio) => {
+  router.push({ name: 'rooms', params: { id: codigoEdificio } });
+};
+
 /* Para cerrar el modal */
 const cerrarModal = () => {
   dialogoVisible.value = false;
@@ -215,7 +219,7 @@ const cerrarModal = () => {
   if (formRef.value) formRef.value.resetValidation();
 };
 
-/* Para agreagr el edificio a la base de datos */
+/* Para agrgar el edificio a la base de datos */
 const guardarEdificio = async () => {
   const { valid } = await formRef.value.validate();
   if (!valid) return;
@@ -238,6 +242,23 @@ const guardarEdificio = async () => {
   });
 };
 
+/* Para confirmar la eliminación antes de borrar */
+const confirmarEliminar = (id) => {
+  if (confirm("¿Estás seguro de eliminar este edificio? Se borrarán todas sus salas, dispositivos y alarmas relacionadas.")) {
+    buildingStore.eliminarEdificio({
+      id: id,
+      onComplete: () => {
+        notify.show("Edificio eliminado con éxito", "success");
+        buildingStore.listarEdificiosPorUsuario({ id: userStore.usuario.idUsuario });
+      },
+      onError: (error) => {
+        const msg = error.response?.data?.mensaje || "Error al eliminar el edificio";
+        notify.show(msg, "error");
+      }
+    });
+  }
+};
+
 onMounted(() => {
   const userId = userStore.usuario?.idUsuario;
   if (userId) {
@@ -251,12 +272,12 @@ onMounted(() => {
   max-width: 520px;
   margin-left: auto;
   margin-right: auto;
+  padding-bottom: 120px;
 }
 
-/* Posicionamiento del Botón Flotante */
 .fab-container {
   position: fixed;
-  bottom: 84px; /* Ajustado para quedar arriba del menú inferior */
+  bottom: 84px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 99;
@@ -265,6 +286,7 @@ onMounted(() => {
 .building-card {
   transition: all 0.3s ease !important;
   border: 1px solid rgba(0,0,0,0.05) !important;
+  cursor: pointer;
 }
 
 .building-card:hover {

@@ -9,6 +9,7 @@ import Notifications from '@/views/Notifications.vue'
 import Others from '@/views/Others.vue' 
 import Buildings from '@/views/Buildings.vue'
 import Reports from '@/views/Reports.vue'
+import Rooms from '@/views/Rooms.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -52,6 +53,11 @@ const router = createRouter({
       path: '/reports',
       name: 'reports',
       component: Reports,
+    },
+       {
+      path: '/rooms/:id',
+      name: 'rooms',
+      component: Rooms,
     },
     
     
