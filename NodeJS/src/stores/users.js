@@ -3,8 +3,9 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useUserStore = defineStore("user", () => {
-  const API_BASE = "http://localhost:3000";
-  const usuario = ref(null);
+ const API_BASE = "http://localhost:3000";
+  /* Al iniciar, intentamos recuperar el usuario del localStorage */
+  const usuario = ref(JSON.parse(localStorage.getItem("powertech_user")) || null);
   const edificiosYSalas = ref([]);
   const loading = ref(false);
 
@@ -14,8 +15,12 @@ export const useUserStore = defineStore("user", () => {
     axios
       .post(`${API_BASE}/user/login`, datos)
       .then((res) => {
-        // Guardamos los datos del usuario (idUsuario, nombreUsuario, etc.)
-        usuario.value = res.data.data;
+        const userData = res.data.data;
+        usuario.value = userData;
+
+        /* Guardamos los datos en localStorage al iniciar sesión */
+        localStorage.setItem("powertech_user", JSON.stringify(userData));
+        
         onComplete(res);
       })
       .catch(onError)
@@ -48,9 +53,12 @@ export const useUserStore = defineStore("user", () => {
   };
 
   // Función para cerrar sesión
-  const logout = () => {
+    const logout = () => {
     usuario.value = null;
     edificiosYSalas.value = [];
+    
+    // 3. Limpiamos el localStorage al salir
+    localStorage.removeItem("powertech_user");
   };
 
   return {
