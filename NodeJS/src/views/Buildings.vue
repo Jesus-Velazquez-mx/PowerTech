@@ -275,6 +275,13 @@ onMounted(() => {
   padding-bottom: 120px;
 }
 
+.v-card {
+  transition: transform 0.2s ease;
+  box-shadow: none !important;
+  border: none !important;
+  background-color: #f8f9fb;
+}
+
 .fab-container {
   position: fixed;
   bottom: 84px;
@@ -285,17 +292,16 @@ onMounted(() => {
 
 .building-card {
   transition: all 0.3s ease !important;
-  border: 1px solid rgba(0,0,0,0.05) !important;
+  border: none !important;
   cursor: pointer;
 }
 
 .building-card:hover {
   background-color: #f0f7ff !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
 }
 
 .border-dashed {
-  border: 2px dashed rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
 }
 </style>
