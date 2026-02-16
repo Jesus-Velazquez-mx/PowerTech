@@ -34,6 +34,8 @@
         class="room-card pa-5 rounded-xl mb-4 d-flex align-center justify-space-between" 
         elevation="1"
         hover
+        tag="router-link"
+        :to="{name: 'monitoring'}"
       >
         <div class="d-flex align-center overflow-hidden">
           <v-avatar color="blue-lighten-5" size="56" class="mr-4 flex-shrink-0">
