@@ -10,6 +10,7 @@ import Others from '@/views/Others.vue'
 import Buildings from '@/views/Buildings.vue'
 import Reports from '@/views/Reports.vue'
 import Rooms from '@/views/Rooms.vue'
+import Devices from '@/views/Devices.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,8 +60,11 @@ const router = createRouter({
       name: 'rooms',
       component: Rooms,
     },
-    
-    
+    {
+      path: '/devices/:id',
+      name: 'devices',
+      component: Devices,
+    },
   ],
 })
 

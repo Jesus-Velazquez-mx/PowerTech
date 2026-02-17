@@ -1,7 +1,7 @@
 // Importar conexión de la BD
 const connection = require('../config/connection');
 
-/* Validación para el inicio de sesión */
+/* Validación */
 function validarLogin(credenciales) {
   const errores = [];
   const { email, contrasena } = credenciales;

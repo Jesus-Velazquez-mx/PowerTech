@@ -1,6 +1,6 @@
 const connection = require('../config/connection');
 
-// Función de validación interna siguiendo tu estilo de userController
+/* Validación */
 function validarEdificio(datos) {
   const errores = [];
   const { codigoEdificio, nombreEdificio, horarioEntrada, horarioSalida, idUsuario } = datos;
@@ -14,7 +14,6 @@ function validarEdificio(datos) {
   if (!horarioEntrada) errores.push("El horario de entrada es obligatorio");
   if (!horarioSalida) errores.push("El horario de salida es obligatorio");
 
-  // Validación lógica de negocio (reflejando el CHECK de SQL)
   if (horarioEntrada && horarioSalida && horarioEntrada >= horarioSalida) {
     errores.push("El horario de entrada debe ser menor al horario de salida");
   }

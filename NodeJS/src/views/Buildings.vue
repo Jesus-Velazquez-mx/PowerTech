@@ -1,18 +1,20 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
-    <div class="text-center mb-10">
-      <h1 class="text-h3 font-weight-bold mb-2" style="color: #3b6fb6;">Mis edificios</h1>
-      <p class="text-subtitle-1 text-grey-darken-1">
-        Bienvenido{{ nombreFormateado ? `, ${nombreFormateado}` : '' }}. Aquí puedes gestionar tus sedes.
-      </p>    
+    
+    <div class="mb-6">
+      <h1 class="text-h4 font-weight-bold">Mis edificios</h1>
+      <p class="text-subtitle-2 text-grey-darken-1">Gestiona tus sedes</p>
     </div>
 
+
+    <!-- Loading -->
     <v-row v-if="loading">
       <v-col cols="12" v-for="n in 3" :key="n">
         <v-skeleton-loader type="list-item-two-line" class="rounded-xl mb-3"></v-skeleton-loader>
       </v-col>
     </v-row>
 
+    <!-- Si no hay edificios -->
     <v-card 
       v-else-if="!edificios || edificios.length === 0"
       class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed"
@@ -26,20 +28,27 @@
       <v-card 
         v-for="item in edificios" 
         :key="item.codigoEdificio"
-        class="building-card pa-5 rounded-xl mb-4 d-flex align-center justify-space-between" 
-        elevation="1"
+        class="building-card pa-4 rounded-xl mb-4 d-flex align-center justify-space-between" 
+        elevation="0"
         hover
         @click="verSalas(item.codigoEdificio)"
       >
         <div class="d-flex align-center overflow-hidden">
-          <v-avatar color="blue-lighten-5" size="56" class="mr-4 flex-shrink-0">
-            <v-icon color="blue-darken-2">mdi-office-building</v-icon>
+          <!-- Icono-->
+          <v-avatar color="blue-lighten-5" size="52" class="mr-4 flex-shrink-0">
+            <v-icon color="blue-darken-2" size="28">mdi-office-building</v-icon>
           </v-avatar>
+
+          <!-- Codigo -->
           <div class="overflow-hidden">
             <div class="text-overline font-weight-bold text-blue-darken-2" style="line-height: 1;">
               {{ item.codigoEdificio }}
             </div>
-            <h2 class="text-h6 font-weight-bold text-truncate">{{ item.nombreEdificio }}</h2>
+          <!-- Nombre -->
+            <h3 class="text-subtitle-1 font-weight-bold text-truncate" style="color: #3b6fb6;">
+              {{ item.nombreEdificio }}
+            </h3>
+            <!-- Horario y Fecha -->
             <div class="text-caption text-grey-darken-1 d-flex align-center">
               <v-icon size="14" class="mr-1">mdi-clock-outline</v-icon>
               Horario: {{ formatearHora(item.horarioEntrada) }} - {{ formatearHora(item.horarioSalida) }}
@@ -47,12 +56,13 @@
           </div>
         </div>
 
+        <!-- Eliminar -->
         <div class="d-flex align-center">
           <v-btn 
             icon="mdi-delete-outline" 
             variant="text" 
             color="red-lighten-1"
-            class="mr-2"
+            class="mr-1"
             @click.stop="confirmarEliminar(item.codigoEdificio)"
           ></v-btn>
           <v-btn icon="mdi-chevron-right" variant="text" color="grey-darken-1"></v-btn>
@@ -60,6 +70,7 @@
       </v-card>
     </div>
 
+    <!-- Botón para agregar -->
     <div class="fab-container">
       <v-btn
         color="blue-darken-2"
@@ -70,15 +81,18 @@
       ></v-btn>
     </div>
 
+    <!-- Modal -->
     <v-dialog v-model="dialogoVisible" max-width="500px" persistent>
-      <v-card class="rounded-xl pa-4">
+      <v-card class="rounded-xl pa-4 elevation-12">
+        <!-- Titulo -->
         <v-card-title class="text-h5 font-weight-bold text-center" style="color: #3b6fb6;">
           Nuevo Edificio
         </v-card-title>
         
         <v-card-text>
+          <!-- Código -->
           <v-form ref="formRef" v-model="formValido">
-            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1">Código del Edificio</div>
+            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 text-grey-darken-2">Código del Edificio</div>
             <v-text-field
               v-model="nuevoEdificio.codigoEdificio"
               placeholder="Ej: EDIF-01"
@@ -89,7 +103,8 @@
               required
             />
 
-            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2">Nombre del Edificio</div>
+            <!-- Nombre -->
+            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Nombre del Edificio</div>
             <v-text-field
               v-model="nuevoEdificio.nombreEdificio"
               placeholder="Nombre de la sede"
@@ -100,9 +115,10 @@
               required
             />
 
+            <!-- Hora de entrada -->
             <v-row>
               <v-col cols="6">
-                <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2">Entrada</div>
+                <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Entrada</div>
                 <v-text-field
                   v-model="nuevoEdificio.horarioEntrada"
                   type="time"
@@ -113,8 +129,10 @@
                   required
                 />
               </v-col>
+
+              <!-- Hora de salida -->
               <v-col cols="6">
-                <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2">Salida</div>
+                <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Salida</div>
                 <v-text-field
                   v-model="nuevoEdificio.horarioSalida"
                   type="time"
@@ -131,7 +149,9 @@
 
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn variant="text" color="grey" @click="cerrarModal" class="text-none">Cancelar</v-btn>
+          <!-- Botón cancelar -->
+          <v-btn variant="text" color="black" @click="cerrarModal" class="text-none">Cancelar</v-btn>
+          <!-- Botón guardar -->
           <v-btn 
             color="blue-darken-2" 
             class="text-none rounded-pill px-6" 
@@ -149,7 +169,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
 import { useUserStore } from "@/stores/users";
@@ -163,7 +183,6 @@ const notify = useNotifyStore();
 
 const { edificios, loading } = storeToRefs(buildingStore);
 
-/* Estados para el Modal */
 const dialogoVisible = ref(false);
 const formRef = ref(null);
 const formValido = ref(false);
@@ -176,7 +195,7 @@ const nuevoEdificio = ref({
   idUsuario: null
 });
 
-/* Reglas de validación */
+/* Validaciones */
 const reglas = {
   codigo: [
     v => !!v || "El código es obligatorio",
@@ -193,38 +212,26 @@ const reglas = {
   ]
 };
 
-/* Para formatear la hora */
+/* Formatear hora */
 const formatearHora = (hora) => {
   if (!hora) return "00:00";
-  return hora.substring(0, 5); // Recorta HH:mm:ss a HH:mm
+  return hora.substring(0, 5);
 };
 
-/* Para formatear el nombre de usuario (se quitará si se quita el mensaje de bienvenida) */
-const nombreFormateado = computed(() => {
-  const nombreCompleto = userStore.usuario?.nombre;
-  if (!nombreCompleto) return "";
-  const primerNombre = nombreCompleto.split(" ")[0];
-  return primerNombre.charAt(0).toUpperCase() + primerNombre.slice(1).toLowerCase();
-});
-
-/* Función para navegar al listado de rooms */
 const verSalas = (codigoEdificio) => {
   router.push({ name: 'rooms', params: { id: codigoEdificio } });
 };
 
-/* Para cerrar el modal */
 const cerrarModal = () => {
   dialogoVisible.value = false;
   nuevoEdificio.value = { codigoEdificio: '', nombreEdificio: '', horarioEntrada: '', horarioSalida: '', idUsuario: null };
   if (formRef.value) formRef.value.resetValidation();
 };
 
-/* Para agrgar el edificio a la base de datos */
 const guardarEdificio = async () => {
   const { valid } = await formRef.value.validate();
   if (!valid) return;
 
-  // Asignamos el ID del usuario logueado antes de enviar
   nuevoEdificio.value.idUsuario = userStore.usuario.idUsuario;
 
   buildingStore.agregarEdificio({
@@ -232,7 +239,6 @@ const guardarEdificio = async () => {
     onComplete: (res) => {
       notify.show("Edificio registrado con éxito", "success");
       cerrarModal();
-      // Recargamos la lista
       buildingStore.listarEdificiosPorUsuario({ id: userStore.usuario.idUsuario });
     },
     onError: (error) => {
@@ -242,7 +248,6 @@ const guardarEdificio = async () => {
   });
 };
 
-/* Para confirmar la eliminación antes de borrar */
 const confirmarEliminar = (id) => {
   if (confirm("¿Estás seguro de eliminar este edificio? Se borrarán todas sus salas, dispositivos y alarmas relacionadas.")) {
     buildingStore.eliminarEdificio({
@@ -268,6 +273,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* [REGLA DE CONSISTENCIA]: Mantener max-width 520px para alineación visual centralizada */
 .main-container {
   max-width: 520px;
   margin-left: auto;
@@ -275,11 +281,21 @@ onMounted(() => {
   padding-bottom: 120px;
 }
 
-.v-card {
-  transition: transform 0.2s ease;
-  box-shadow: none !important;
+/* [REGLA DE CONSISTENCIA]: Tarjetas con fondo #f8f9fb y transición de escala al presionar */
+.building-card {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  background-color: #f8f9fb !important;
   border: none !important;
-  background-color: #f8f9fb;
+  cursor: pointer;
+}
+
+.building-card:hover {
+  background-color: #f0f7ff !important;
+  transform: translateY(-2px);
+}
+
+.building-card:active {
+  transform: scale(0.98);
 }
 
 .fab-container {
@@ -290,18 +306,7 @@ onMounted(() => {
   z-index: 99;
 }
 
-.building-card {
-  transition: all 0.3s ease !important;
-  border: none !important;
-  cursor: pointer;
-}
-
-.building-card:hover {
-  background-color: #f0f7ff !important;
-  transform: translateY(-2px);
-}
-
 .border-dashed {
-  border: none !important;
+    border: 2px dashed rgba(0, 0, 0, 0.08) !important;
 }
 </style>

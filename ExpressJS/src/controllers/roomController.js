@@ -1,6 +1,6 @@
 const connection = require('../config/connection');
 
-// Función de validación siguiendo el estándar de buildingController
+/* Validación */
 function validarSala(datos) {
   const errores = [];
   const { codigoSala, codigoEdificio, nombreSala } = datos;
