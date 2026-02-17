@@ -1,62 +1,112 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
-    <div class="text-center mb-10">
-      <h1 class="text-h3 font-weight-bold mb-2" style="color: #3b6fb6;">Otros</h1>
-      <p class="text-subtitle-1 text-grey-darken-1">
-        Test para otros. Usuario logueado: {{ nombreFormateado ? ` ${nombreFormateado}` : '' }}
-      </p>    
+    <div class="mb-8">
+      <h1 class="text-h4 font-weight-bold">Administración rápida</h1>
+      <p class="text-subtitle-2 text-grey-darken-1">
+        Bienvenido, {{ nombreFormateado || 'Usuario' }}
+      </p>
     </div>
 
-    <v-card class="pa-6 rounded-xl mb-6 d-flex align-center justify-space-between" elevation="1">
-      <div>
-        <div class="text-subtitle-2 font-weight-bold text-grey-darken-2 mb-1">Test de la pestaña "Otros"</div>
-      </div>
-    </v-card>
+    <div v-for="seccion in menuAdministracion" :key="seccion.titulo" class="mb-8">
+      <h2 class="text-subtitle-1 font-weight-bold text-grey-darken-3 mb-4">
+        {{ seccion.titulo }}
+      </h2>
+
+      <v-row dense>
+        <v-col
+          v-for="item in seccion.items"
+          :key="item.label"
+          cols="6"
+        >
+          <v-card
+            class="pa-6 rounded-xl d-flex flex-column align-center justify-center action-card"
+            elevation="0"
+            @click="item.accion"
+          >
+            <v-icon size="42" color="grey-darken-2" class="mb-2">
+              {{ item.icon }}
+            </v-icon>
+            <span class="text-body-2 font-weight-medium text-grey-darken-3">
+              {{ item.label }}
+            </span>
+          </v-card>
+        </v-col>
+      </v-row>
+    </div>
+
   </v-container>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useUserStore } from "@/stores/users";
 
 const userStore = useUserStore();
-const ahorro = ref(null);
 
-  // Propiedad computada para formatear el nombre del usuario
+// Datos estáticos para los botones, listos para agregar funciones
+const menuAdministracion = [
+  {
+    titulo: 'Gestión de edificios',
+    items: [
+      { label: 'Agregar', icon: 'mdi-home-plus-outline', accion: () => console.log('Agregar Edificio') },
+      { label: 'Administrar', icon: 'mdi-office-building-cog-outline', accion: () => console.log('Admin Edificio') },
+    ]
+  },
+  {
+    titulo: 'Gestión de dispositivos',
+    items: [
+      { label: 'Agregar', icon: 'mdi-plus-box-outline', accion: () => console.log('Agregar Disp') },
+      { label: 'Monitorear', icon: 'mdi-pulse', accion: () => console.log('Monitorear Disp') },
+    ]
+  },
+  {
+    titulo: 'Gestión de reportes',
+    items: [
+      { label: 'Generar', icon: 'mdi-file-document-outline', accion: () => console.log('Generar Reporte') },
+      { label: 'Imprimir', icon: 'mdi-printer-eye', accion: () => console.log('Imprimir Reporte') },
+    ]
+  }
+];
+
+// Tu lógica de nombre formateado mantenida
 const nombreFormateado = computed(() => {
-  // Obtenemos el nombre desde el objeto usuario en el store
   const nombreCompleto = userStore.usuario?.nombre;
-  
   if (!nombreCompleto) return "";
-  // Solamente el primer nombre
   const primerNombre = nombreCompleto.split(" ")[0];
-  // Primera en Mayúscula, el resto en minúsculas
   return primerNombre.charAt(0).toUpperCase() + primerNombre.slice(1).toLowerCase();
-});
-
-const ahorroPrediccion = computed(() => {
-  return ahorro.value == null ? '- kWh' : `${ahorro.value} kWh`
 });
 </script>
 
 <style scoped>
-/* Mantener este tamaño del contenedor en todas las pestañas que no sean el log in ni el sign up */
 .main-container {
   max-width: 520px;
   margin-left: auto;
   margin-right: auto;
-
+  padding-bottom: 40px;
 }
 
-/* Efecto para las tarjetas */
-.v-card {
-  transition: transform 0.2s ease;
-  box-shadow: none !important;
+/* Estilo de las tarjetas según la imagen */
+.action-card {
+  background-color: #f8f9fb !important; /* Gris muy claro/azulado de la imagen */
   border: none !important;
-  background-color: #f8f9fb;
+  height: 160px;
+  width: 220px;
+  transition: all 0.2s ease;
+  aspect-ratio: 1.1 / 1; /* Las hace un poco más cuadradas */
 }
 
-.v-card:active {
-  transform: scale(0.98);
+.action-card:hover {
+  background-color: #f0f2f5 !important;
+  transform: translateY(-2px);
+}
+
+.action-card:active {
+  transform: scale(0.96);
+  background-color: #e8ebf0 !important;
+}
+
+/* Ajuste de tipografía para los títulos de sección */
+h2 {
+  letter-spacing: 0.5px;
 }
 </style>
