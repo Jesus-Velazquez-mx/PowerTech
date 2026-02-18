@@ -1,32 +1,33 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
-    <div class="mb-8">
+    
+    <div class="mb-6">
       <h1 class="text-h4 font-weight-bold">Administración rápida</h1>
-      <p class="text-subtitle-2 text-grey-darken-1">
-        Bienvenido, {{ nombreFormateado || 'Usuario' }}
-      </p>
+      <p class="text-subtitle-2 text-grey-darken-1"> Bienvenido, {{ nombreFormateado || 'Usuario' }}</p>
     </div>
 
-    <div v-for="seccion in menuAdministracion" :key="seccion.titulo" class="mb-8">
-      <h2 class="text-subtitle-1 font-weight-bold text-grey-darken-3 mb-4">
+    <div v-for="seccion in menuAdministracion" :key="seccion.titulo" class="mb-5">
+      <h2 class="text-subtitle-2 font-weight-bold text-grey-darken-2 mb-2 ml-1">
         {{ seccion.titulo }}
       </h2>
 
-      <v-row dense>
+      <v-row dense class="ga-0">
         <v-col
           v-for="item in seccion.items"
           :key="item.label"
           cols="6"
+          class="pa-1"
         >
           <v-card
-            class="pa-6 rounded-xl d-flex flex-column align-center justify-center action-card"
+            class="pa-3 rounded-xl d-flex flex-column align-center justify-center standard-card"
             elevation="0"
+            ripple
             @click="item.accion"
           >
-            <v-icon size="42" color="grey-darken-2" class="mb-2">
+            <v-icon size="40" color="grey-darken-4" class="mb-1">
               {{ item.icon }}
             </v-icon>
-            <span class="text-body-2 font-weight-medium text-grey-darken-3">
+            <span class="text-caption font-weight-bold text-grey-darken-3" style="font-size: 0.75rem !important;">
               {{ item.label }}
             </span>
           </v-card>
@@ -43,7 +44,6 @@ import { useUserStore } from "@/stores/users";
 
 const userStore = useUserStore();
 
-// Datos estáticos para los botones, listos para agregar funciones
 const menuAdministracion = [
   {
     titulo: 'Gestión de edificios',
@@ -68,7 +68,6 @@ const menuAdministracion = [
   }
 ];
 
-// Tu lógica de nombre formateado mantenida
 const nombreFormateado = computed(() => {
   const nombreCompleto = userStore.usuario?.nombre;
   if (!nombreCompleto) return "";
@@ -85,28 +84,28 @@ const nombreFormateado = computed(() => {
   padding-bottom: 40px;
 }
 
-/* Estilo de las tarjetas según la imagen */
-.action-card {
-  background-color: #f8f9fb !important; /* Gris muy claro/azulado de la imagen */
-  border: none !important;
-  height: 160px;
-  width: 220px;
-  transition: all 0.2s ease;
-  aspect-ratio: 1.1 / 1; /* Las hace un poco más cuadradas */
+/* === CLASE DE DISEÑO ESTÁNDAR POWERTECH ACTUALIZADA === */
+.standard-card {
+  background-color: #f8f9fb !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.3s ease !important;
+  box-shadow: none !important;
+  aspect-ratio: 1.8 / 1; 
+  cursor: pointer;
 }
 
-.action-card:hover {
-  background-color: #f0f2f5 !important;
+.standard-card:hover {
+  background-color: #f0f7ff !important;
   transform: translateY(-2px);
+  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.1) !important;
 }
 
-.action-card:active {
-  transform: scale(0.96);
-  background-color: #e8ebf0 !important;
+.standard-card:active {
+  transform: scale(0.97);
 }
 
-/* Ajuste de tipografía para los títulos de sección */
 h2 {
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  font-size: 1rem !important;
 }
 </style>

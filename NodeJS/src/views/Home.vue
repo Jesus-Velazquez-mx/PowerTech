@@ -28,7 +28,7 @@
           elevation="1"
           ripple
           tag="router-link"
-          :to="{name: 'reports'}"
+          :to="{ name: 'report-selection' }""
         >
           <v-icon size="40" class="mb-2">mdi-file-document-outline</v-icon>
           <span class="text-caption font-weight-bold">Reportes</span>
@@ -47,13 +47,31 @@
         </v-card>
       </v-col>
 
-      <!-- Advertencias (se harán reactivas cuando se implemente lo de las notificaciones)-->
+      <!-- Advertencias -->
       <v-col cols="7">
-        <v-card class="pa-6 rounded-xl fill-height text-center d-flex flex-column align-center justify-center" elevation="1">
-          <div class="text-subtitle-1 font-weight-bold mb-4">Advertencias</div>
-          <v-icon size="60" color="grey-darken-1" class="mb-4">mdi-thumb-up-outline</v-icon>
+        <v-card 
+          class="pa-6 rounded-xl fill-height text-center d-flex flex-column align-center justify-center" 
+          elevation="1"
+          ripple
+          tag="router-link"
+          :to="{name: 'notifications'}" 
+        > <div class="text-subtitle-1 font-weight-bold mb-4">Advertencias</div>
+          
+          <v-icon 
+            size="60" 
+            :color="alarmas.length > 0 ? 'red-darken-1' : 'grey-darken-1'" 
+            class="mb-4"
+          >
+            {{ alarmas.length > 0 ? 'mdi-alert-circle-outline' : 'mdi-thumb-up-outline' }}
+          </v-icon>
+
           <div class="text-caption text-grey-darken-1">
-            Nada de que preocuparse por aquí
+            <template v-if="alarmas.length > 0">
+              Tienes <strong>{{ alarmas.length }}</strong> alertas activas
+            </template>
+            <template v-else>
+              Nada de que preocuparse por aquí
+            </template>
           </div>
         </v-card>
       </v-col>
@@ -63,20 +81,30 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia';
 import { useUserStore } from "@/stores/users";
+import { useAlarmStore } from '@/stores/alarms';
 
 const userStore = useUserStore();
+const alarmStore = useAlarmStore();
+
+// Extraer alarmas de forma reactiva
+const { alarmas } = storeToRefs(alarmStore);
+
 const ahorro = ref(null);
 
-// Propiedad computada para formatear el nombre del usuario
-const nombreFormateado = computed(() => {
-  // Obtenemos el nombre desde el objeto usuario en el store
-  const nombreCompleto = userStore.usuario?.nombre;
+// Cargar alarmas al iniciar para tener el conteo actualizado
+onMounted(() => {
+  const userId = userStore.usuario?.idUsuario;
+  if (userId) {
+    alarmStore.listarAlarmas({ id: userId });
+  }
+});
 
+const nombreFormateado = computed(() => {
+  const nombreCompleto = userStore.usuario?.nombre;
   if (!nombreCompleto) return "";
-  // Solamente el primer nombre
   const primerNombre = nombreCompleto.split(" ")[0];
-  // Primera en Mayúscula, el resto en minúsculas
   return primerNombre.charAt(0).toUpperCase() + primerNombre.slice(1).toLowerCase();
 });
 

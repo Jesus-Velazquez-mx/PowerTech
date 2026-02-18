@@ -11,6 +11,7 @@ import Buildings from '@/views/Buildings.vue'
 import Reports from '@/views/Reports.vue'
 import Rooms from '@/views/Rooms.vue'
 import Devices from '@/views/Devices.vue'
+import ReportSelection from '@/views/ReportSelection.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,7 +52,7 @@ const router = createRouter({
       component: Buildings,
     },
        {
-      path: '/reports',
+      path: '/reports/:buildingId/:roomId',
       name: 'reports',
       component: Reports,
     },
@@ -60,10 +61,15 @@ const router = createRouter({
       name: 'rooms',
       component: Rooms,
     },
-    {
+       {
       path: '/devices/:id',
       name: 'devices',
       component: Devices,
+    },
+    {
+      path: '/reports/selection',
+      name: 'report-selection',
+      component: ReportSelection,
     },
   ],
 })

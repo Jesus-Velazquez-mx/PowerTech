@@ -3,7 +3,8 @@
     
     <div class="mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" color="blue-darken-2" @click="$router.back()"></v-btn>
-      <span class="text-subtitle-1 font-weight-bold ml-2">Volver a edificios</span>      <h1 class="text-h4 font-weight-bold">Mis salas</h1>
+      <span class="text-subtitle-1 font-weight-bold ml-2">Volver a edificios</span>      
+      <h1 class="text-h4 font-weight-bold">Mis salas</h1>
       <p class="text-subtitle-2 text-grey-darken-1">Edificio: {{ $route.params.id }}</p>
     </div>
 

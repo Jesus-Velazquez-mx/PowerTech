@@ -20,6 +20,8 @@
 
   <!-- Menú global inferior -->
   <Menu />
+  <!-- ChatBot -->
+  <ChatBot />
   </v-app>
 </template>
 
@@ -27,6 +29,7 @@
 import { storeToRefs } from "pinia";
 import { useNotifyStore } from "@/stores/notify";
 import Menu from "@/components/Menu.vue";
+import ChatBot from "./views/ChatBot.vue";
 
 const notify = useNotifyStore();
 const { toast } = storeToRefs(notify);
