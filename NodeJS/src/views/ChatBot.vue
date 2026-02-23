@@ -78,7 +78,7 @@ const isOpen = ref(false)
 .chatbot-wrapper {
   position: fixed;
   bottom: 100px; /* Sobre el menú inferior */
-  right: 20px;
+  right: 80px;
   z-index: 1000;
 }
 
