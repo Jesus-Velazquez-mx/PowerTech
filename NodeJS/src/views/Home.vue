@@ -28,7 +28,7 @@
           elevation="1"
           ripple
           tag="router-link"
-          :to="{ name: 'report-selection' }""
+          :to="{ name: 'report-selection' }"
         >
           <v-icon size="40" class="mb-2">mdi-file-document-outline</v-icon>
           <span class="text-caption font-weight-bold">Reportes</span>
