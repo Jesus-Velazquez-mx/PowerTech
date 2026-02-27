@@ -1,6 +1,7 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
     
+    <!-- Titulo -->
     <div class="mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" color="blue-darken-2" @click="$router.back()"></v-btn>
       <span class="text-subtitle-1 font-weight-bold ml-2">Volver a salas</span>     
@@ -15,7 +16,7 @@
       </v-col>
     </v-row>
 
-    <!-- Si no hay dispositivos -->
+    <!-- Placeholder por si no hay dispositivos -->
     <v-card 
       v-else-if="!dispositivos || dispositivos.length === 0"
       class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed w-100"
@@ -27,6 +28,7 @@
 
     <div v-else>
       <v-row>
+        <!-- Tarjetas de dispositivos -->
         <v-col 
           v-for="item in dispositivos" 
           :key="item.codigoDispositivo"
@@ -37,8 +39,9 @@
             class="device-card pa-4 rounded-xl text-center h-100 d-flex flex-column align-center justify-center" 
             elevation="0"
             hover
+            @click="abrirModalDetalles(item)"
           >
-          <!-- Botón Eliminar -->  
+          <!-- Botón de eliminar -->
           <v-btn
               icon="mdi-close-circle"
               variant="text"
@@ -48,18 +51,17 @@
               @click.stop="confirmarEliminar(item.codigoDispositivo)"
             ></v-btn>
 
-            <!-- Icono -->
+            <!-- Icono representativo del tipo de dispositivo -->
             <v-avatar color="blue-lighten-5" size="64" class="mb-3">
               <v-icon size="32" color="blue-darken-2">
                 {{ item.tipo === 'C' ? 'mdi-laptop' : 'mdi-air-conditioner' }}
               </v-icon>
             </v-avatar>
             
-            <!-- Código -->
+            <!-- Código y nombre del dispositivo -->
             <div class="text-caption font-weight-bold text-blue-darken-2 text-uppercase">
               {{ item.codigoDispositivo }}
             </div>
-            <!-- Nombre -->
             <div class="text-subtitle-2 font-weight-bold text-grey-darken-2 text-truncate w-100 px-1">
               {{ item.nombre }}
             </div>
@@ -68,8 +70,8 @@
       </v-row>
     </div>
 
-    <!-- Botón Agregar -->
     <div class="fab-container">
+      <!-- Botón flotante para agregar nuevo dispositivo -->
       <v-btn
         color="blue-darken-2"
         icon="mdi-plus"
@@ -79,18 +81,18 @@
       ></v-btn>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal para agregar nuevo dispositivo -->
     <v-dialog v-model="dialogoVisible" max-width="500px" persistent>
       <v-card class="rounded-xl pa-4 elevation-12">
-        <!-- Título -->
+        <!-- Titulo -->
         <v-card-title class="text-h5 font-weight-bold text-center" style="color: #3b6fb6;">
           Nuevo Dispositivo
         </v-card-title>
         
         <v-card-text>
           <v-form ref="formRef" v-model="formValido">
-            <!-- Tipo de dispositivo -->
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 text-grey-darken-2">Tipo de Dispositivo</div>
+            <!-- Seleccionar tipo de dispositivo-->
             <v-select
               v-model="nuevoDispositivo.tipo"
               :items="categorias"
@@ -103,8 +105,8 @@
               required
             ></v-select>
             
-            <!-- Código -->
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Código</div>
+            <!-- Codigo -->
             <v-text-field
               v-model="nuevoDispositivo.codigoDispositivo"
               placeholder="Ej: PC-01"
@@ -115,7 +117,7 @@
               required
             />
 
-            <!-- Nombre -->
+            <!-- Nombre-->
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Nombre / Etiqueta</div>
             <v-text-field
               v-model="nuevoDispositivo.nombre"
@@ -130,7 +132,7 @@
             <template v-if="nuevoDispositivo.tipo === 'A'">
               <v-row>
                 <v-col cols="6">
-                  <!-- Unidad -->
+                  <!-- Tipo de unidad (ej: Minisplit, Ventana, etc) -->
                   <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Unidad</div>
                   <v-text-field
                     v-model="nuevoDispositivo.tipoUnidad"
@@ -141,8 +143,8 @@
                   />
                 </v-col>
                 <v-col cols="6">
-                <!-- Seer -->
-                  <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">SEER</div>
+                  <!-- Eficiencia SEER -->
+                <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">SEER</div>
                   <v-text-field
                     v-model="nuevoDispositivo.eficienciaSEER"
                     type="number"
@@ -158,9 +160,9 @@
 
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <!-- Botón Cancelar -->
+          <!-- Botón para cancelar -->
           <v-btn variant="text" color="black" @click="cerrarModal" class="text-none">Cancelar</v-btn>
-          <!-- Botón Guardar -->
+          <!-- Botón para guardar nuevo dispositivo -->
           <v-btn 
             color="blue-darken-2" 
             class="text-none rounded-pill px-6" 
@@ -174,6 +176,90 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="dialogoDetallesVisible" max-width="500px">
+      <!-- Modal para mostrar detalles del dispositivo seleccionado -->
+      <v-card class="rounded-xl pa-4 elevation-12">
+        <!-- Titulo -->
+        <v-card-title class="text-h5 font-weight-bold text-center mb-2" style="color: #3b6fb6;">
+          Detalles del Equipo
+        </v-card-title>
+        
+        <v-card-text class="pt-2" v-if="dispositivoSeleccionado">
+          <div class="d-flex align-center mb-6">
+            <!-- Icono representativo del tipo de dispositivo -->
+            <v-avatar color="blue-lighten-5" size="56" class="mr-4">
+              <v-icon size="28" color="blue-darken-2">
+                {{ dispositivoSeleccionado.tipo === 'C' ? 'mdi-laptop' : 'mdi-air-conditioner' }}
+              </v-icon>
+            </v-avatar>
+            <!-- Código y nombre del dispositivo -->
+            <div>
+              <div class="text-subtitle-1 font-weight-bold text-grey-darken-3" style="line-height: 1.2;">
+                {{ dispositivoSeleccionado.nombre }}
+              </div>
+              <div class="text-caption font-weight-bold text-blue-darken-2 mt-1">
+                {{ dispositivoSeleccionado.codigoDispositivo }}
+              </div>
+            </div>
+          </div>
+
+          <v-divider class="mb-4"></v-divider>
+
+          <div class="text-subtitle-2 font-weight-bold mb-3 text-grey-darken-2">Sensores y Lecturas</div>
+          
+          <!-- Si no hay sensores vinculados al dispositivo -->
+          <div v-if="!dispositivoSeleccionado.sensores || dispositivoSeleccionado.sensores.length === 0" class="text-center pa-4 text-grey">
+            <v-icon size="32" class="mb-2">mdi-leak-off</v-icon>
+            <div class="text-caption">No hay sensores vinculados</div>
+          </div>
+          
+          <div v-else>
+            <!-- Listado de sensores con su última lectura -->
+            <v-card 
+              v-for="sensor in dispositivoSeleccionado.sensores" 
+              :key="sensor.codigoSensor"
+              class="mb-3 pa-3 rounded-lg"
+              style="background-color: #f8f9fb; border: 1px solid rgba(0,0,0,0.05);"
+              elevation="0"
+            >
+              <div class="d-flex justify-space-between align-center mb-1">
+                <!-- Nombre del sensor con icono -->
+                <span class="text-body-2 font-weight-bold text-grey-darken-3">
+                  <v-icon size="16" color="grey-darken-1" class="mr-1">mdi-access-point</v-icon>
+                  {{ sensor.nombreSensor }}
+                </span>
+                
+                <!-- Última lectura del sensor -->
+                <span v-if="sensor.ultimaLectura" class="text-subtitle-1 font-weight-black text-green-accent-4">
+                  {{ Number(sensor.ultimaLectura.valor).toFixed(1) }} {{ sensor.unidadMedida }}
+                </span>
+                <span v-else class="text-caption text-grey">Sin datos</span>
+              </div>
+              
+              <!-- Fecha de la última lectura -->
+              <div class="text-caption text-grey-darken-1 mt-1 text-right">
+                <v-icon size="12" class="mr-1">mdi-clock-outline</v-icon>
+                {{ formatearFecha(sensor.ultimaLectura?.fechaHora) }}
+              </div>
+            </v-card>
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4 pt-0">
+          <v-spacer></v-spacer>
+          <v-btn 
+            color="blue-darken-2" 
+            class="text-none rounded-pill px-6" 
+            variant="flat"
+            @click="dialogoDetallesVisible = false"
+          >
+            Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </v-container>
 </template>
 
@@ -194,6 +280,10 @@ const { dispositivos, loading } = storeToRefs(deviceStore);
 const dialogoVisible = ref(false);
 const formRef = ref(null);
 const formValido = ref(false);
+
+/* Estados para el Modal de Detalles */
+const dialogoDetallesVisible = ref(false);
+const dispositivoSeleccionado = ref(null);
 
 const categorias = [
   { text: 'Computadora', value: 'C' },
@@ -220,6 +310,22 @@ const reglas = {
     v => !!v || "Obligatorio",
     v => (v && v.length <= 100) || "Máximo 100 caracteres"
   ]
+};
+
+/* Formateador de fechas para las lecturas */
+const formatearFecha = (fechaISO) => {
+  if (!fechaISO) return "Esperando registro...";
+  const opciones = { 
+    day: '2-digit', month: 'short', 
+    hour: '2-digit', minute: '2-digit' 
+  };
+  return new Date(fechaISO).toLocaleDateString('es-MX', opciones);
+};
+
+/* Función para abrir detalles */
+const abrirModalDetalles = (dispositivo) => {
+  dispositivoSeleccionado.value = dispositivo;
+  dialogoDetallesVisible.value = true;
 };
 
 const cerrarModal = () => {
@@ -291,6 +397,7 @@ onMounted(() => {
   background-color: #f8f9fb !important;
   border: none !important;
   position: relative;
+  cursor: pointer; /* Añadido para que al pasar el mouse indique que se puede dar clic */
 }
 
 .device-card:hover {

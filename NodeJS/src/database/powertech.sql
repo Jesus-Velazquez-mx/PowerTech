@@ -166,8 +166,22 @@ CREATE TABLE ALARMAS (
     ON UPDATE RESTRICT
 ) ENGINE=InnoDB;
 
-INSERT INTO USUARIOS (nombre, email, contrasena)
-VALUES ('test', 'test@gmail.com', 'test');
-
-select * from usuarios
-
+CREATE VIEW VISTA_REPORTE_SALA AS
+SELECT 
+    S.codigoSala,
+    S.nombreSala,
+    E.codigoEdificio,
+    E.nombreEdificio,
+    -- Dato Principal: % de Dispositivos sin alarmas activas (Salud de la sala)
+    IFNULL(
+      ( ( (SELECT COUNT(*) FROM DISPOSITIVOS D WHERE D.codigoSala = S.codigoSala) - 
+          (SELECT COUNT(*) FROM ALARMAS A WHERE A.codigoSala = S.codigoSala AND A.estado = 'ACTIVA') 
+        ) / (SELECT COUNT(*) FROM DISPOSITIVOS D WHERE D.codigoSala = S.codigoSala) * 100 
+      ), 100) AS indice_operatividad,
+    -- Datos de Conteo
+    (SELECT COUNT(*) FROM DISPOSITIVOS D WHERE D.codigoSala = S.codigoSala) AS total_dispositivos,
+    (SELECT COUNT(*) FROM ALARMAS A WHERE A.codigoSala = S.codigoSala AND A.estado = 'ACTIVA') AS alarmas_activas,
+    (SELECT COUNT(*) FROM DISPOSITIVOS D WHERE D.codigoSala = S.codigoSala AND D.tipo = 'C') AS cant_computadoras,
+    (SELECT COUNT(*) FROM DISPOSITIVOS D WHERE D.codigoSala = S.codigoSala AND D.tipo = 'A') AS cant_aires
+FROM SALAS S
+JOIN EDIFICIOS E ON S.codigoEdificio = E.codigoEdificio;
