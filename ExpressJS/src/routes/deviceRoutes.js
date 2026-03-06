@@ -14,4 +14,8 @@ router.post('/', deviceController.crear);
 // Elimina un dispositivo y limpia las alarmas de sus sensores
 router.delete('/:id', deviceController.eliminar);
 
+// GET /device/user/:id
+// Obtiene la lista de todos los dispositivos de un usuario
+router.get('/user/:id', deviceController.listarPorUsuario);
+
 module.exports = router;

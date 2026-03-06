@@ -14,6 +14,10 @@
         <v-icon>mdi-laptop</v-icon>
       </v-btn>
 
+      <v-btn to="/sensors">
+        <v-icon>mdi-access-point</v-icon>
+      </v-btn>
+
       <v-btn to="/others">
         <v-icon>mdi-dots-grid</v-icon>
       </v-btn>

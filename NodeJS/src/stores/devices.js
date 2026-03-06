@@ -49,12 +49,28 @@ export const useDeviceStore = defineStore("device", () => {
       .finally(() => (loading.value = false));
   };
 
+  // GET /device/user/:id
+  // Obtiene la lista de todos los dispositivos de un usuario
+  const listarDispositivosPorUsuario = ({ id, onComplete, onError }) => {
+    loading.value = true;
+    axios
+      .get(`${API_BASE}/user/${id}`)
+      .then((res) => {
+        // Guardamos la lista en el estado reactivo
+        dispositivos.value = res.data.data;
+        if (onComplete) onComplete(res);
+      })
+      .catch(onError)
+      .finally(() => (loading.value = false));
+  };
+
   return {
     dispositivos,
     dispositivo,
     loading,
     listarDispositivosPorSala,
     agregarDispositivo,
-    eliminarDispositivo
+    eliminarDispositivo,
+    listarDispositivosPorUsuario
   };
 });

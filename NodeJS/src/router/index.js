@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from "@/stores/users"; // Importamos tu store de usuario
+import { useUserStore } from "@/stores/users"; // Importamos store de usuario
 
 // Vistas
 import Home from '@/views/Home.vue'
@@ -13,6 +13,7 @@ import Reports from '@/views/Reports.vue'
 import Rooms from '@/views/Rooms.vue'
 import Devices from '@/views/Devices.vue'
 import ReportSelection from '@/views/ReportSelection.vue'
+import Sensors from '@/views/Sensors.vue'
 
 const routes = [
   { path: '/', name: 'home', component: Home, meta: { requiresAuth: true } },
@@ -24,8 +25,7 @@ const routes = [
   { path: '/buildings', name: 'buildings', component: Buildings, meta: { requiresAuth: true } },
   { path: '/rooms/:id', name: 'rooms', component: Rooms, meta: { requiresAuth: true } },
   { path: '/devices/:id', name: 'devices', component: Devices, meta: { requiresAuth: true } },
-
-  // Moví la selección arriba del reporte dinámico para evitar colisiones
+  { path: '/sensors', name: 'sensors', component: Sensors, meta: { requiresAuth: true } }, 
   { path: '/reports/selection', name: 'report-selection', component: ReportSelection, meta: { requiresAuth: true } },
   { path: '/reports/:buildingId/:roomId', name: 'reports', component: Reports, meta: { requiresAuth: true } },
 ]

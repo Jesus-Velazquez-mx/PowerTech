@@ -40,30 +40,33 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from "@/stores/users";
 
 const userStore = useUserStore();
+const router = useRouter(); // Instanciamos el enrutador
 
 const menuAdministracion = [
   {
     titulo: 'Gestión de edificios',
     items: [
-      { label: 'Agregar', icon: 'mdi-home-plus-outline', accion: () => console.log('Agregar Edificio') },
-      { label: 'Administrar', icon: 'mdi-office-building-cog-outline', accion: () => console.log('Admin Edificio') },
+      { label: 'Agregar', icon: 'mdi-home-plus-outline', accion: () => router.push('/buildings') },
+      { label: 'Administrar', icon: 'mdi-office-building-cog-outline', accion: () => router.push('/buildings') },
     ]
   },
   {
     titulo: 'Gestión de dispositivos',
     items: [
-      { label: 'Agregar', icon: 'mdi-plus-box-outline', accion: () => console.log('Agregar Disp') },
-      { label: 'Monitorear', icon: 'mdi-pulse', accion: () => console.log('Monitorear Disp') },
+      // Enlazamos a la nueva vista global de sensores
+      { label: 'Sensores', icon: 'mdi-access-point', accion: () => router.push('/sensors') },
+      { label: 'Monitorear', icon: 'mdi-pulse', accion: () => router.push('/monitoring') },
     ]
   },
   {
     titulo: 'Gestión de reportes',
     items: [
-      { label: 'Generar', icon: 'mdi-file-document-outline', accion: () => console.log('Generar Reporte') },
-      { label: 'Imprimir', icon: 'mdi-printer-eye', accion: () => console.log('Imprimir Reporte') },
+      { label: 'Generar', icon: 'mdi-file-document-outline', accion: () => router.push('/reports/selection') },
+      { label: 'Imprimir', icon: 'mdi-printer-eye', accion: () => router.push('/reports/selection') },
     ]
   }
 ];
@@ -84,7 +87,6 @@ const nombreFormateado = computed(() => {
   padding-bottom: 40px;
 }
 
-/* === CLASE DE DISEÑO ESTÁNDAR POWERTECH ACTUALIZADA === */
 .standard-card {
   background-color: #f8f9fb !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;

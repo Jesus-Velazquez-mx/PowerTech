@@ -162,8 +162,38 @@ function eliminar(req, res) {
   }
 }
 
+// GET /device/user/:id
+// Lista todos los dispositivos de todos los edificios de un usuario
+function listarPorUsuario(req, res) {
+  if (connection) {
+    const { id } = req.params; // idUsuario
+    
+    // Unimos DISPOSITIVOS con SALAS y EDIFICIOS para filtrar por el dueño
+    const sql = `
+      SELECT d.codigoDispositivo, d.nombre, d.tipo
+      FROM DISPOSITIVOS d
+      INNER JOIN SALAS s ON d.codigoSala = s.codigoSala
+      INNER JOIN EDIFICIOS e ON s.codigoEdificio = e.codigoEdificio
+      WHERE e.idUsuario = ?
+    `;
+
+    connection.query(sql, [id], (err, rows) => {
+      if (err) {
+        res.status(500).json(err);
+      } else {
+        res.json({
+          error: false,
+          data: rows,
+          mensaje: rows.length > 0 ? "Dispositivos globales recuperados" : "No tienes dispositivos registrados"
+        });
+      }
+    });
+  }
+}
+
 module.exports = {
   listarPorSala,
   crear,
-  eliminar
+  eliminar,
+  listarPorUsuario
 };
