@@ -185,3 +185,6 @@ SELECT
     (SELECT COUNT(*) FROM DISPOSITIVOS D WHERE D.codigoSala = S.codigoSala AND D.tipo = 'A') AS cant_aires
 FROM SALAS S
 JOIN EDIFICIOS E ON S.codigoEdificio = E.codigoEdificio;
+
+
+

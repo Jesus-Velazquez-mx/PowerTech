@@ -19,7 +19,7 @@ const roomRoutes = require('./routes/roomRoutes');
 const deviceRoutes = require('./routes/deviceRoutes');
 const VISTA_REPORTE_SALARoutes = require('./routes/VISTA_REPORTE_SALARoutes');
 const sensorRoutes = require('./routes/sensorRoutes');
-
+const monitoringRoutes = require('./routes/monitoringRoutes')
 app.use('/user', userRoutes);
 app.use('/alarm', alarmRoutes)
 app.use('/building', buildingRoutes)
@@ -27,6 +27,7 @@ app.use('/report', VISTA_REPORTE_SALARoutes);
 app.use('/room', roomRoutes);
 app.use('/sensor', sensorRoutes);
 app.use('/device', deviceRoutes);
+app.use('/monitoring', monitoringRoutes);
 
 app.post('/api/ai/consejo', async (req, res) => {
   try {

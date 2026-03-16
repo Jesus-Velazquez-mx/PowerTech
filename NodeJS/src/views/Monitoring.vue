@@ -2,79 +2,61 @@
   <v-container class="mt-8 px-4 main-container" fluid>
     <div class="mb-6">
       <h1 class="text-h4 font-weight-bold">Monitoreo</h1>
-      <p class="text-subtitle-2 text-grey-darken-1">Estado energético de tus edificios</p>
+      <p class="text-subtitle-2 text-grey-darken-1">Estado energético de tus edificios (Mes Actual)</p>
     </div>
 
     <v-row class="mb-6" align="center" dense>
-      <v-col cols="12" sm="7">
-        <v-btn-toggle
-          v-model="filtroTiempo"
-          rounded="xl"
-          color="primary"
-          group
-          mandatory
-          density="comfortable"
-        >
-          <v-btn value="dia">Día</v-btn>
-          <v-btn value="semana">Semana</v-btn>
-          <v-btn value="mes">Mes</v-btn>
-        </v-btn-toggle>
-      </v-col>
-      <v-col cols="12" sm="5">
+      <v-col cols="12">
         <v-select
-          v-model="edificioSeleccionado"
-          :items="edificios"
-          label="Edificio"
-          variant="solo-filled"
-          rounded="xl"
-          flat
-          hide-details
-          bg-color="blue-lighten-5"
-          color="primary"
-          density="compact"
+            v-model="edificioSeleccionado"
+            :items="edificios"
+            label="Seleccionar Edificio"
+            variant="solo-filled"
+            rounded="xl"
+            flat
+            hide-details
+            bg-color="blue-lighten-5"
+            color="primary"
+            density="comfortable"
         ></v-select>
       </v-col>
     </v-row>
 
     <v-row v-if="loading">
       <v-col cols="12" v-for="n in 3" :key="n">
-         <v-skeleton-loader
-           type="card"
-           class="rounded-xl mb-3"
-         ></v-skeleton-loader>
+        <v-skeleton-loader type="card" class="rounded-xl mb-3"></v-skeleton-loader>
       </v-col>
     </v-row>
 
     <v-card
-      v-else-if="!datosMonitoreo"
-      class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed"
+        v-else-if="consumoTotal === 0"
+        class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed"
     >
       <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-chart-bar-off</v-icon>
       <div class="text-h6 text-grey-darken-2">Sin datos disponibles</div>
-      <div class="text-body-2 text-grey">No hay registros para este periodo.</div>
+      <div class="text-body-2 text-grey">No hay registros para {{ edificioSeleccionado }} en marzo 2026.</div>
     </v-card>
 
     <div v-else class="monitoring-content">
-
       <v-card class="rounded-xl pa-5 mb-4 elevation-1 border-light">
         <div class="d-flex justify-space-between align-start mb-4">
           <div>
             <span class="text-subtitle-1 text-grey-darken-1 d-block">Consumo total</span>
             <span class="text-h4 font-weight-bold text-green-darken-1">
-              {{ datosMonitoreo.consumoTotal }} kWh
+              {{ parseFloat(consumoTotal).toFixed(2) }} kWh
             </span>
           </div>
         </div>
         <v-sheet height="120" class="d-flex align-end justify-space-between pt-4">
           <div
-            v-for="(val, i) in [40, 60, 45, 90, 65, 80, 50]"
-            :key="i"
-            class="bg-blue-lighten-4 rounded-t-lg"
-            :style="{ height: val + '%', width: '12%' }"
+              v-for="(val, i) in [40, 60, 45, 90, 65, 80, 50]"
+              :key="i"
+              class="bg-blue-lighten-4 rounded-t-lg"
+              :style="{ height: val + '%', width: '12%' }"
           ></div>
         </v-sheet>
         <div class="d-flex justify-space-between mt-2 text-caption text-grey">
-          <span>3:00 PM</span><span>8:00 PM</span>
+          <span>Lecturas del mes</span><span>Marzo 2026</span>
         </div>
       </v-card>
 
@@ -83,12 +65,12 @@
         <v-row align="center" no-gutters>
           <v-col cols="5">
             <v-progress-circular
-              :model-value="75"
-              :size="100"
-              :width="12"
-              color="blue"
+                :model-value="porcentajeCompu"
+                :size="100"
+                :width="12"
+                color="blue"
             >
-              <span class="text-caption font-weight-bold">75%</span>
+              <span class="text-caption font-weight-bold">{{ porcentajeCompu }}%</span>
             </v-progress-circular>
           </v-col>
           <v-col cols="7">
@@ -105,13 +87,13 @@
         <v-col cols="6">
           <v-card class="rounded-xl pa-4 text-center elevation-1 border-light">
             <p class="text-caption text-grey-darken-1 mb-1">Costo Est.</p>
-            <h3 class="text-h6 font-weight-bold">${{ datosMonitoreo.costo }}</h3>
+            <h3 class="text-h6 font-weight-bold">${{ (consumoTotal * 1.5).toFixed(2) }}</h3>
           </v-card>
         </v-col>
         <v-col cols="6">
           <v-card class="rounded-xl pa-4 text-center elevation-1 border-light">
-            <p class="text-caption text-grey-darken-1 mb-1">Uso Pico</p>
-            <h3 class="text-h6 font-weight-bold">{{ datosMonitoreo.pico }} kWh</h3>
+            <p class="text-caption text-grey-darken-1 mb-1">Dispositivos</p>
+            <h3 class="text-h6 font-weight-bold">8</h3>
           </v-card>
         </v-col>
       </v-row>
@@ -120,84 +102,85 @@
 </template>
 
 <script setup>
-import { onMounted, watch, ref } from 'vue';
-import { storeToRefs } from 'pinia';
-import { useUserStore } from '@/stores/users';
-// import { useMonitoringStore } from '@/stores/monitoring'; // Ejemplo de store
+import { onMounted, watch, ref, computed } from 'vue';
+import axios from 'axios';
 
-const userStore = useUserStore();
-const { usuario } = storeToRefs(userStore);
-
-// Estados locales (Placeholder para conectar a tu Store después)
 const loading = ref(false);
-const filtroTiempo = ref('dia');
-const edificioSeleccionado = ref('Edificio B');
-const edificios = ['Edificio A', 'Edificio B', 'Edificio C'];
+const edificioSeleccionado = ref('ED-NORTE');
+const edificios = ['ED-NORTE', 'ED-SUR', 'ED-LAB'];
 
-const datosMonitoreo = ref({
-  consumoTotal: 100,
-  costo: '1,000,000',
-  pico: 180
+const consumoTotal = ref(0);
+const totalValorCompu = ref(0);
+const totalValorAires = ref(0);
+
+const porcentajeCompu = computed(() => {
+  const suma = totalValorCompu.value + totalValorAires.value;
+  return suma > 0 ? Math.round((totalValorCompu.value / suma) * 100) : 0;
 });
 
-const desglose = [
-  { label: 'Iluminación', valor: 38, color: 'red' },
-  { label: 'Aclimatización', valor: 29, color: 'blue' },
-  { label: 'Computadoras', valor: 33, color: 'green' }
-];
+const porcentajeAires = computed(() => {
+  const suma = totalValorCompu.value + totalValorAires.value;
+  return suma > 0 ? Math.round((totalValorAires.value / suma) * 100) : 0;
+});
 
-/**
- * Función para jalar datos de la BD
- */
+const desglose = computed(() => [
+  { label: 'Computadoras', valor: porcentajeCompu.value, color: 'blue' },
+  { label: 'Aires Acond.', valor: porcentajeAires.value, color: 'cyan' }
+]);
+
 const cargarDatos = async () => {
-  const userId = usuario.value?.idUsuario;
-  if (!userId) return;
-
   loading.value = true;
+  const id = edificioSeleccionado.value;
   try {
-    // Simulación de llamada a API/Store
-    // await monitoringStore.obtenerResumen({ id: userId, edificio: edificioSeleccionado.value, periodo: filtroTiempo.value });
-    console.log("Cargando datos para:", edificioSeleccionado.value);
+    const [resGral, resComp, resAire] = await Promise.all([
+      axios.get(`http://localhost:3000/monitoring/general/${id}`),
+      axios.get(`http://localhost:3000/monitoring/comp/${id}`),
+      axios.get(`http://localhost:3000/monitoring/aire/${id}`)
+    ]);
+
+    const dataGral = resGral.data.data;
+    // Maneja tanto el alias 'total' como el nombre por defecto de la función SUM
+    consumoTotal.value = dataGral[0]?.total || dataGral[0]?.['sum(l.valor)'] || 0;
+
+    const dataComp = resComp.data.data || [];
+    totalValorCompu.value = dataComp.reduce((acc, curr) => {
+      return acc + parseFloat(curr.total_valor || curr['sum(l.valor)'] || 0);
+    }, 0);
+
+    const dataAire = resAire.data.data || [];
+    totalValorAires.value = dataAire.reduce((acc, curr) => {
+      return acc + parseFloat(curr.total_valor || curr['sum(l.valor)'] || 0);
+    }, 0);
+
+  } catch (error) {
+    console.error("Error cargando datos:", error);
+    consumoTotal.value = 0;
   } finally {
-    setTimeout(() => { loading.value = false; }, 800); // Simulación de lag
+    setTimeout(() => { loading.value = false; }, 400);
   }
 };
 
-onMounted(() => {
-  cargarDatos();
-});
-
-// Watchers para recargar al cambiar filtros (como en una app real)
-watch([filtroTiempo, edificioSeleccionado, () => usuario.value?.idUsuario], () => {
-  cargarDatos();
-});
+onMounted(cargarDatos);
+watch(edificioSeleccionado, cargarDatos);
 </script>
 
 <style scoped>
 .main-container {
   max-width: 520px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
 }
-
 .v-card {
+  background-color: #ffffff !important;
+  border: 1px solid #eef0f2 !important;
   transition: transform 0.2s ease;
-  box-shadow: none !important;
-  border: none !important;
-  background-color: #f8f9fb;
 }
-
-.v-sheet{
-   background-color: #f8f9fb;
-}
-
 .v-card:active {
-  transform: scale(0.98);
+  transform: scale(0.99);
 }
-
-
-/* Animación simple para las barras del gráfico */
 .bg-blue-lighten-4 {
-  transition: height 0.4s ease-out;
+  transition: height 0.6s ease;
+}
+.border-dashed {
+  border: 2px dashed #d1d5db !important;
 }
 </style>
