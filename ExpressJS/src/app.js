@@ -11,10 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuración de la IA
+// Configuración de la IA (Gemini 1.5 Flash es la más estable para chats rápidos)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Importación de rutas
+// Importación de rutas de PowerTech
 const userRoutes = require('./routes/userRoutes');
 const alarmRoutes = require('./routes/alarmRoutes');
 const buildingRoutes = require('./routes/buildingRoutes');
@@ -38,23 +38,20 @@ app.use('/monitoring', monitoringRoutes);
 // =============================================================
 app.post('/api/ai/consejo', async (req, res) => {
   try {
-    const { consulta, edificioId } = req.body?.datos || {};
+    const { consulta } = req.body?.datos || {};
 
     if (!consulta) {
       return res.status(400).json({ error: 'No se proporcionó una consulta.' });
     }
 
-    // 1. OBTENER LECTURAS DE TODOS LOS EDIFICIOS (SIN WHERE)
+    // 1. OBTENER LECTURAS DE TODOS LOS EDIFICIOS
     let contextoConsumo = "No hay datos de consumo disponibles actualmente.";
 
     const sql = `
       SELECT
         e.nombreEdificio,
         CAST(IFNULL(SUM(l.valor), 0) AS DECIMAL(18,2)) AS total_kWh,
-        (SELECT COUNT(*)
-         FROM ALARMAS a
-         WHERE a.codigoEdificio = e.codigoEdificio
-           AND a.estado = 'ACTIVA') AS alertas
+        (SELECT COUNT(*) FROM ALARMAS a WHERE a.codigoEdificio = e.codigoEdificio AND a.estado = 'ACTIVA') AS alertas
       FROM EDIFICIOS e
              LEFT JOIN SALAS sa ON e.codigoEdificio = sa.codigoEdificio
              LEFT JOIN DISPOSITIVOS d ON sa.codigoSala = d.codigoSala
@@ -67,53 +64,48 @@ app.post('/api/ai/consejo', async (req, res) => {
 
     const [rows] = await connection.promise().query(sql);
 
-    // --- IMPRESIÓN EN LA CONSOLA DE CLION ---
-    console.log(`\n--- [DEBUG] Datos de PowerTech ---`);
+    // --- LOG PARA CLION ---
+    console.log(`\n--- [DEBUG] Reporte PowerTech ---`);
     if (rows.length > 0) {
       console.table(rows);
-
-      // Mapeamos los datos asegurando que total_kWh sea un número
       contextoConsumo = rows.map(r => {
-        // Convertimos explícitamente a número para evitar el error de .toFixed()
-        const consumoNumerico = Number(r.total_kWh);
-        return `- ${r.nombreEdificio}: ${consumoNumerico.toFixed(2)} kWh, ${r.alertas} alertas.`;
+        const num = Number(r.total_kWh);
+        return `- **${r.nombreEdificio}**: ${num.toFixed(2)} kWh (${r.alertas} alertas activas).`;
       }).join('\n');
-    } else {
-      console.log("⚠️ No se encontraron edificios en la base de datos.");
     }
     console.log("----------------------------------\n");
 
-    // 2. CONFIGURACIÓN DEL MODELO (Asegúrate de que el nombre sea correcto)
+    // 2. CONFIGURACIÓN DEL MODELO
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
-      Actúa como PowerBot, un asistente experto en eficiencia energética para PowerTech.
-      ESTADO ACTUAL DE LOS EDIFICIOS:
+      Actúa como PowerBot, el asistente inteligente de PowerTech.
+      
+      ESTADO ACTUAL DE LA INFRAESTRUCTURA:
       ${contextoConsumo}
       
-      PREGUNTA DEL USUARIO:
+      CONSULTA DEL USUARIO:
       "${consulta}"
       
-      INSTRUCCIÓN:
-      Responde de forma amable, técnica y breve (3 líneas). Usa los datos reales si es necesario.
+      REGLAS DE RESPUESTA:
+      1. Usa Markdown: Negritas para datos importantes y listas para edificios.
+      2. Sé técnico pero muy breve (máximo 4 líneas).
+      3. Si hay alertas, recomienda revisar los sensores de ese edificio.
     `;
 
-    // 3. GENERACIÓN DE CONTENIDO
+    // 3. GENERACIÓN
     const aiResponse = await model.generateContent(prompt);
-    const texto = aiResponse.response.text() || 'Sin respuesta generada.';
+    const texto = aiResponse.response.text();
 
     res.json({ mensaje: texto });
 
   } catch (error) {
     console.error('❌ Error en PowerBot:', error.message);
-    res.status(500).json({
-      error: 'Error en el servicio de PowerBot.',
-      detalle: error.message
-    });
+    res.status(500).json({ error: 'Error en el servicio de PowerBot.' });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor PowerTech listo en puerto ${PORT}`);
+  console.log(`🚀 PowerTech Backend en puerto ${PORT}`);
 });
