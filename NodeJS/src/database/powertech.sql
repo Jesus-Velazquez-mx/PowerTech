@@ -185,3 +185,62 @@ SELECT
     (SELECT COUNT(*) FROM DISPOSITIVOS D WHERE D.codigoSala = S.codigoSala AND D.tipo = 'A') AS cant_aires
 FROM SALAS S
 JOIN EDIFICIOS E ON S.codigoEdificio = E.codigoEdificio;
+
+DELIMITER //
+
+CREATE TRIGGER trg_lectura_alta_alarma
+AFTER INSERT ON LECTURAS
+FOR EACH ROW
+BEGIN
+    -- Declaración de variables para almacenar datos temporales
+    DECLARE v_umbralAlto DECIMAL(18,4);
+    DECLARE v_codigoSala VARCHAR(10);
+    DECLARE v_codigoEdificio VARCHAR(10);
+    DECLARE v_codigoAlarma VARCHAR(10);
+    
+    -- 1. Obtener el umbral alto del sensor que acaba de registrar la lectura
+    SELECT umbralAlto INTO v_umbralAlto
+    FROM SENSORES
+    WHERE codigoSensor = NEW.codigoSensor;
+    
+    -- 2. Verificar si el umbral existe y si la nueva lectura lo supera
+    IF v_umbralAlto IS NOT NULL AND NEW.valor > v_umbralAlto THEN
+        
+        -- 3. Obtener el código de la sala y del edificio subiendo por la jerarquía
+        SELECT d.codigoSala, s.codigoEdificio 
+        INTO v_codigoSala, v_codigoEdificio
+        FROM SENSORES sen
+        INNER JOIN DISPOSITIVOS d ON sen.codigoDispositivo = d.codigoDispositivo
+        INNER JOIN SALAS s ON d.codigoSala = s.codigoSala
+        WHERE sen.codigoSensor = NEW.codigoSensor;
+        
+        -- 4. Generar un código único para la alarma de máximo 10 caracteres (Ej: AL-A1B2C3D)
+        SET v_codigoAlarma = CONCAT('AL-', UPPER(SUBSTRING(MD5(RAND()), 1, 7)));
+        
+        -- 5. Insertar la nueva alarma automática
+        INSERT INTO ALARMAS (
+            codigoAlarma, 
+            codigoEdificio, 
+            codigoSala, 
+            codigoSensor, 
+            tipoAlarma, 
+            nivel, 
+            estado, 
+            fechaHora, 
+            detalle
+        ) VALUES (
+            v_codigoAlarma, 
+            v_codigoEdificio, 
+            v_codigoSala, 
+            NEW.codigoSensor,
+            'Pico de Consumo',  -- O el nombre que prefieras
+            4,                  -- Nivel de gravedad (1 al 5 según tu CHECK)
+            'ACTIVA',           -- Estado inicial obligatorio
+            NEW.fechaHora, 
+            CONCAT('Alerta: La lectura de ', NEW.valor, ' ha excedido el umbral máximo de ', v_umbralAlto)
+        );
+        
+    END IF;
+END //
+
+DELIMITER ;
