@@ -4,8 +4,8 @@
       <v-card
           v-if="isOpen"
           class="chat-window rounded-xl elevation-12 d-flex flex-column"
-          width="340"
-          height="500"
+          width="360"
+          height="550"
       >
         <v-toolbar color="green-darken-1" flat>
           <v-avatar size="32" class="ml-2 bg-white">
@@ -36,13 +36,14 @@
                 msg.esBot ? 'bot-message shadow-sm' : 'user-message elevation-1'
               ]"
             >
-              {{ msg.texto }}
+              <div v-if="msg.esBot" v-html="renderMarkdown(msg.texto)" class="markdown-content"></div>
+              <div v-else>{{ msg.texto }}</div>
             </div>
           </div>
 
           <div v-if="cargando" class="d-flex align-center mb-4">
             <v-progress-circular indeterminate color="green-darken-1" size="18" width="2"></v-progress-circular>
-            <span class="ml-2 text-caption text-grey-darken-1 italic">PowerBot está pensando...</span>
+            <span class="ml-2 text-caption text-grey-darken-1 italic">PowerBot analizando datos...</span>
           </div>
         </v-card-text>
 
@@ -51,7 +52,7 @@
         <v-card-actions class="pa-3 bg-white">
           <v-text-field
               v-model="nuevoMensaje"
-              placeholder="Escribe tu consulta aquí..."
+              placeholder="Pregunta sobre el consumo..."
               variant="solo-filled"
               density="compact"
               rounded="pill"
@@ -90,147 +91,60 @@
 <script setup>
 import { ref, nextTick } from 'vue';
 import axios from 'axios';
+import MarkdownIt from 'markdown-it';
 
-// Estados reactivos
+const md = new MarkdownIt();
 const isOpen = ref(false);
 const nuevoMensaje = ref('');
 const cargando = ref(false);
 const chatContainer = ref(null);
 
-// Historial inicial
 const mensajes = ref([
-  {
-    id: 1,
-    texto: '¡Hola! Soy PowerBot. ¿En qué puedo ayudarte con el consumo de tus edificios hoy?',
-    esBot: true
-  }
+  { id: 1, texto: '¡Hola! Soy **PowerBot**. Estoy conectado a la base de datos de **PowerTech**. ¿Qué deseas consultar?', esBot: true }
 ]);
 
-// Función para manejar el envío de mensajes
+const renderMarkdown = (texto) => md.render(texto);
+
 const enviarMensaje = async () => {
   if (!nuevoMensaje.value.trim() || cargando.value) return;
 
-  const textoUsuario = nuevoMensaje.value;
-
-  // 1. Agregar mensaje del usuario a la lista
-  mensajes.value.push({
-    id: Date.now(),
-    texto: textoUsuario,
-    esBot: false
-  });
-
-  nuevoMensaje.value = ''; // Limpiar input
-  cargando.value = true;   // Mostrar "pensando"
+  const userText = nuevoMensaje.value;
+  mensajes.value.push({ id: Date.now(), texto: userText, esBot: false });
+  nuevoMensaje.value = '';
+  cargando.value = true;
   await scrollToBottom();
 
   try {
-    // 2. Petición a tu servidor Express
-    // Ajusta la URL si tu servidor corre en otro puerto
-    const response = await axios.post('http://localhost:3000/api/ai/consejo', {
-      datos: { consulta: textoUsuario }
+    const res = await axios.post('http://localhost:3000/api/ai/consejo', {
+      datos: { consulta: userText }
     });
-
-    // 3. Agregar respuesta de la IA
-    mensajes.value.push({
-      id: Date.now() + 1,
-      texto: response.data.mensaje,
-      esBot: true
-    });
-  } catch (error) {
-    console.error("Error al conectar con el servidor:", error);
-    mensajes.value.push({
-      id: Date.now() + 1,
-      texto: 'Hubo un problema al conectar con el servidor. Por favor, asegúrate de que el backend esté corriendo.',
-      esBot: true
-    });
+    mensajes.value.push({ id: Date.now() + 1, texto: res.data.mensaje, esBot: true });
+  } catch (e) {
+    mensajes.value.push({ id: Date.now() + 1, texto: '⚠️ Error de conexión con el servidor.', esBot: true });
   } finally {
     cargando.value = false;
     await scrollToBottom();
   }
 };
 
-// Función para desplazar el scroll al último mensaje
 const scrollToBottom = async () => {
-  await nextTick(); // Esperamos a que el DOM se actualice
+  await nextTick();
   if (chatContainer.value) {
-    // chatContainer.value.$el accede al elemento del DOM si es un componente de Vuetify
-    const container = chatContainer.value.$el || chatContainer.value;
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: 'smooth'
-    });
+    const el = chatContainer.value.$el || chatContainer.value;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }
 };
 </script>
 
 <style scoped>
-.chatbot-wrapper {
-  position: fixed;
-  bottom: 100px; /* Separación del menú inferior */
-  right: 20px;
-  z-index: 1000;
-}
+.chatbot-wrapper { position: fixed; bottom: 100px; right: 20px; z-index: 1000; }
+.chat-window { position: absolute; bottom: 75px; right: 0; }
+.message-bubble { max-width: 85%; line-height: 1.5; }
+.bot-message { background-color: white; color: #333; }
+.user-message { background-color: #2e7d32; color: white; }
 
-.chat-window {
-  position: absolute;
-  bottom: 75px;
-  right: 0;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-trigger-btn {
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-}
-
-.chat-trigger-btn:hover {
-  transform: scale(1.1);
-}
-
-/* Burbujas de chat */
-.message-bubble {
-  max-width: 85%;
-  line-height: 1.4;
-  word-wrap: break-word;
-}
-
-.bot-message {
-  background-color: white;
-  color: #333;
-  border-bottom-left-radius: 4px !important;
-}
-
-.user-message {
-  background-color: #2e7d32; /* Verde oscuro (v-green-darken-1) */
-  color: white;
-  border-bottom-right-radius: 4px !important;
-}
-
-.shadow-inner {
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-}
-
-.shadow-sm {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-/* Scrollbar personalizado */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 5px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #bdbdbd;
-  border-radius: 10px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #9e9e9e;
-}
+/* Estilos para el Markdown dentro del chat */
+.markdown-content :deep(p) { margin-bottom: 8px; }
+.markdown-content :deep(ul) { padding-left: 20px; margin-bottom: 8px; }
+.markdown-content :deep(strong) { color: #1b5e20; font-weight: 700; }
 </style>
