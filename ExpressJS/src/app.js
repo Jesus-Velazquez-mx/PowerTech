@@ -44,7 +44,7 @@ app.post('/api/ai/consejo', async (req, res) => {
       return res.status(400).json({ error: 'No se proporcionó una consulta.' });
     }
 
-    // 1. OBTENER LECTURAS DE TODOS LOS EDIFICIOS
+    // OBTENER LECTURAS DE TODOS LOS EDIFICIOS
     let contextoConsumo = "No hay datos de consumo disponibles actualmente.";
 
     const sql = `
@@ -100,12 +100,12 @@ app.post('/api/ai/consejo', async (req, res) => {
     res.json({ mensaje: texto });
 
   } catch (error) {
-    console.error('❌ Error en PowerBot:', error.message);
+    console.error('Error en PowerBot:', error.message);
     res.status(500).json({ error: 'Error en el servicio de PowerBot.' });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 PowerTech Backend en puerto ${PORT}`);
+  console.log(`Base de datos en conectada en el puerto ${PORT}`);
 });

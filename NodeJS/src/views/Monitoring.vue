@@ -10,6 +10,8 @@
         <v-select
             v-model="edificioSeleccionado"
             :items="edificios"
+            item-title="nombreEdificio"
+            item-value="codigoEdificio"
             label="Seleccionar Edificio"
             variant="solo-filled"
             rounded="xl"
@@ -18,23 +20,33 @@
             bg-color="blue-lighten-5"
             color="primary"
             density="comfortable"
+            :loading="loadingBuildings"
         ></v-select>
       </v-col>
     </v-row>
 
-    <v-row v-if="loading">
+    <v-row v-if="loading || loadingBuildings">
       <v-col cols="12" v-for="n in 3" :key="n">
         <v-skeleton-loader type="card" class="rounded-xl mb-3"></v-skeleton-loader>
       </v-col>
     </v-row>
 
     <v-card
-        v-else-if="consumoTotal === 0"
+        v-else-if="consumoTotal === 0 && edificioSeleccionado"
         class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed"
     >
       <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-chart-bar-off</v-icon>
       <div class="text-h6 text-grey-darken-2">Sin datos disponibles</div>
-      <div class="text-body-2 text-grey">No hay registros para {{ edificioSeleccionado }} en marzo 2026.</div>
+      <div class="text-body-2 text-grey">No hay registros para <b>{{ nombreEdificioMostrado }}</b> en marzo 2026.</div>
+    </v-card>
+
+    <v-card
+        v-else-if="!edificioSeleccionado"
+        class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed"
+    >
+      <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-office-building-marker-outline</v-icon>
+      <div class="text-h6 text-grey-darken-2">Selecciona un edificio</div>
+      <div class="text-body-2 text-grey">Elige un edificio del menú para ver su consumo.</div>
     </v-card>
 
     <div v-else class="monitoring-content">
@@ -104,14 +116,28 @@
 <script setup>
 import { onMounted, watch, ref, computed } from 'vue';
 import axios from 'axios';
+import { storeToRefs } from 'pinia';
+import { useBuildingStore } from '@/stores/buildings';
+import { useUserStore } from '@/stores/users';
+
+const buildingStore = useBuildingStore();
+const userStore = useUserStore();
+
+// Obtenemos los edificios del usuario directamente del store
+const { edificios, loading: loadingBuildings } = storeToRefs(buildingStore);
 
 const loading = ref(false);
-const edificioSeleccionado = ref('ED-NORTE');
-const edificios = ['ED-NORTE', 'ED-SUR', 'ED-LAB'];
+const edificioSeleccionado = ref(null);
 
 const consumoTotal = ref(0);
 const totalValorCompu = ref(0);
 const totalValorAires = ref(0);
+
+// Computed para mostrar el nombre real del edificio en caso de no haber datos
+const nombreEdificioMostrado = computed(() => {
+  const edif = edificios.value.find(e => e.codigoEdificio === edificioSeleccionado.value);
+  return edif ? edif.nombreEdificio : edificioSeleccionado.value;
+});
 
 const porcentajeCompu = computed(() => {
   const suma = totalValorCompu.value + totalValorAires.value;
@@ -129,6 +155,8 @@ const desglose = computed(() => [
 ]);
 
 const cargarDatos = async () => {
+  if (!edificioSeleccionado.value) return; // Si no hay edificio, detenemos la carga
+
   loading.value = true;
   const id = edificioSeleccionado.value;
   try {
@@ -139,7 +167,6 @@ const cargarDatos = async () => {
     ]);
 
     const dataGral = resGral.data.data;
-    // Maneja tanto el alias 'total' como el nombre por defecto de la función SUM
     consumoTotal.value = dataGral[0]?.total || dataGral[0]?.['sum(l.valor)'] || 0;
 
     const dataComp = resComp.data.data || [];
@@ -160,7 +187,23 @@ const cargarDatos = async () => {
   }
 };
 
-onMounted(cargarDatos);
+onMounted(() => {
+  const userId = userStore.usuario?.idUsuario;
+  if (userId) {
+    // Jalamos los edificios del backend al entrar
+    buildingStore.listarEdificiosPorUsuario({ 
+      id: userId,
+      onComplete: () => {
+        // Seleccionar el primer edificio automáticamente si existen
+        if (edificios.value.length > 0) {
+          edificioSeleccionado.value = edificios.value[0].codigoEdificio;
+        }
+      }
+    });
+  }
+});
+
+// Cuando el usuario cambia de edificio en el v-select, disparamos cargarDatos
 watch(edificioSeleccionado, cargarDatos);
 </script>
 
