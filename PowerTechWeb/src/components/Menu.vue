@@ -62,8 +62,10 @@
 
       <v-divider class="my-3 opacity-20"></v-divider>
 
+      <!-- Aquí se debe de cambiar dependiendo de la URL del Sistema -->
       <v-list-item 
-        to="/login" 
+        href="http://localhost:5173/login" 
+        target="_blank"
         prepend-icon="mdi-account-key" 
         title="Iniciar Sesión"
         class="animated-item login-item custom-font font-weight-bold text-blue-darken-3"

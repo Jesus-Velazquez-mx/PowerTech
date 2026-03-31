@@ -107,5 +107,5 @@ app.post('/api/ai/consejo', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Base de datos en conectada en el puerto ${PORT}`);
+  console.log(`Base de datos conectada en el puerto ${PORT}`);
 });
