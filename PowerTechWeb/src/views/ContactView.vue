@@ -109,7 +109,7 @@
                   <div>
                     <h4 class="text-subtitle-1 font-weight-bold text-white mb-1">Correo Electrónico</h4>
                     <p class="text-body-2 text-blue-lighten-4 mb-0">
-                      contacto@powertech.com
+                      contactatech224@gmail.com
                     </p>
                   </div>
                 </div>
@@ -121,7 +121,7 @@
                   <div>
                     <h4 class="text-subtitle-1 font-weight-bold text-white mb-1">Llámanos</h4>
                     <p class="text-body-2 text-blue-lighten-4 mb-0">
-                      +52 (667) 123 4567
+                      +52 (667) 142 1191
                     </p>
                   </div>
                 </div>
@@ -129,10 +129,25 @@
                 <div>
                   <h4 class="text-subtitle-2 font-weight-bold text-white mb-4 custom-font text-uppercase tracking-wide">Síguenos</h4>
                   <div class="d-flex ga-3">
-                    <v-btn icon="mdi-facebook" variant="tonal" color="white" class="social-btn"></v-btn>
-                    <v-btn icon="mdi-twitter" variant="tonal" color="white" class="social-btn"></v-btn>
-                    <v-btn icon="mdi-linkedin" variant="tonal" color="white" class="social-btn"></v-btn>
-                    <v-btn icon="mdi-github" variant="tonal" color="white" class="social-btn"></v-btn>
+                    
+                    <v-btn 
+                      href="https://www.instagram.com/contactotech224/" 
+                      target="_blank"
+                      icon="mdi-instagram" 
+                      variant="tonal" 
+                      color="white" 
+                      class="social-btn"
+                    ></v-btn>
+
+                    <v-btn 
+                      href="https://github.com/Jesus-Velazquez-mx/PowerTech" 
+                      target="_blank"
+                      icon="mdi-github" 
+                      variant="tonal" 
+                      color="white" 
+                      class="social-btn"
+                    ></v-btn>
+
                   </div>
                 </div>
               </div>
