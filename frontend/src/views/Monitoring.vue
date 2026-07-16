@@ -7,21 +7,9 @@
 
     <v-row class="mb-6" align="center" dense>
       <v-col cols="12">
-        <v-select
-            v-model="edificioSeleccionado"
-            :items="edificios"
-            item-title="nombreEdificio"
-            item-value="codigoEdificio"
-            label="Seleccionar Edificio"
-            variant="solo-filled"
-            rounded="xl"
-            flat
-            hide-details
-            bg-color="blue-lighten-5"
-            color="primary"
-            density="comfortable"
-            :loading="loadingBuildings"
-        ></v-select>
+        <v-select v-model="edificioSeleccionado" :items="edificios" item-title="nombreEdificio"
+          item-value="codigoEdificio" label="Seleccionar Edificio" variant="solo-filled" rounded="xl" flat hide-details
+          bg-color="blue-lighten-5" color="primary" density="comfortable" :loading="loadingBuildings"></v-select>
       </v-col>
     </v-row>
 
@@ -31,19 +19,15 @@
       </v-col>
     </v-row>
 
-    <v-card
-        v-else-if="consumoTotal === 0 && edificioSeleccionado"
-        class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed"
-    >
+    <v-card v-else-if="consumoTotal === 0 && edificioSeleccionado"
+      class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed">
       <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-chart-bar-off</v-icon>
       <div class="text-h6 text-grey-darken-2">Sin datos disponibles</div>
       <div class="text-body-2 text-grey">No hay registros para <b>{{ nombreEdificioMostrado }}</b> en marzo 2026.</div>
     </v-card>
 
-    <v-card
-        v-else-if="!edificioSeleccionado"
-        class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed"
-    >
+    <v-card v-else-if="!edificioSeleccionado"
+      class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed">
       <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-office-building-marker-outline</v-icon>
       <div class="text-h6 text-grey-darken-2">Selecciona un edificio</div>
       <div class="text-body-2 text-grey">Elige un edificio del menú para ver su consumo.</div>
@@ -60,12 +44,8 @@
           </div>
         </div>
         <v-sheet height="120" class="d-flex align-end justify-space-between pt-4">
-          <div
-              v-for="(val, i) in [40, 60, 45, 90, 65, 80, 50]"
-              :key="i"
-              class="bg-blue-lighten-4 rounded-t-lg"
-              :style="{ height: val + '%', width: '12%' }"
-          ></div>
+          <div v-for="(val, i) in [40, 60, 45, 90, 65, 80, 50]" :key="i" class="bg-blue-lighten-4 rounded-t-lg"
+            :style="{ height: val + '%', width: '12%' }"></div>
         </v-sheet>
         <div class="d-flex justify-space-between mt-2 text-caption text-grey">
           <span>Lecturas del mes</span><span>Marzo 2026</span>
@@ -76,12 +56,7 @@
         <p class="text-subtitle-1 text-grey-darken-1 mb-4">Consumo por dispositivo</p>
         <v-row align="center" no-gutters>
           <v-col cols="5">
-            <v-progress-circular
-                :model-value="porcentajeCompu"
-                :size="100"
-                :width="12"
-                color="blue"
-            >
+            <v-progress-circular :model-value="porcentajeCompu" :size="100" :width="12" color="blue">
               <span class="text-caption font-weight-bold">{{ porcentajeCompu }}%</span>
             </v-progress-circular>
           </v-col>
@@ -161,9 +136,9 @@ const cargarDatos = async () => {
   const id = edificioSeleccionado.value;
   try {
     const [resGral, resComp, resAire] = await Promise.all([
-      axios.get(`http://localhost:3000/monitoring/general/${id}`),
-      axios.get(`http://localhost:3000/monitoring/comp/${id}`),
-      axios.get(`http://localhost:3000/monitoring/aire/${id}`)
+      axios.get(`/monitoring/general/${id}`),
+      axios.get(`/monitoring/comp/${id}`),
+      axios.get(`/monitoring/aire/${id}`)
     ]);
 
     const dataGral = resGral.data.data;
@@ -191,7 +166,7 @@ onMounted(() => {
   const userId = userStore.usuario?.idUsuario;
   if (userId) {
     // Jalamos los edificios del backend al entrar
-    buildingStore.listarEdificiosPorUsuario({ 
+    buildingStore.listarEdificiosPorUsuario({
       id: userId,
       onComplete: () => {
         // Seleccionar el primer edificio automáticamente si existen
@@ -212,17 +187,21 @@ watch(edificioSeleccionado, cargarDatos);
   max-width: 520px;
   margin: 0 auto;
 }
+
 .v-card {
   background-color: #ffffff !important;
   border: 1px solid #eef0f2 !important;
   transition: transform 0.2s ease;
 }
+
 .v-card:active {
   transform: scale(0.99);
 }
+
 .bg-blue-lighten-4 {
   transition: height 0.6s ease;
 }
+
 .border-dashed {
   border: 2px dashed #d1d5db !important;
 }
