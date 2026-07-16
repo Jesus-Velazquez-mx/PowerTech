@@ -1,7 +1,5 @@
-CREATE DATABASE PowerTech
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
+DROP DATABASE IF EXISTS PowerTech;
+CREATE DATABASE PowerTech CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE PowerTech;
 
 /* =========================

@@ -3,32 +3,32 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
-# Copiamos dependencias y las instalamos
 COPY frontend/package*.json ./
 RUN npm install
 
-# Copiamos el código fuente de Vue y compilamos
 COPY frontend/ ./
 RUN npm run build
 
-# Construir el Backend (Express) y unir todo
+# Construir el Backend (Express)
 FROM node:20-alpine
+
+# Instalamos curl para poder descargar el certificado de AWS
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
-# Copiamos dependencias del backend (usamos --omit=dev para una imagen más ligera)
 COPY backend/package*.json ./
 RUN npm install --omit=dev
 
-# Copiamos el código fuente del backend
+# Creamos la carpeta config y descargamos el certificado de AWS RDS directo en la imagen
+RUN mkdir -p config && \
+    curl -o ./config/global-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+
 COPY backend/ ./
 
-# Copiamos el frontend ya compilado desde la Etapa 1
-# directamente a la carpeta "public" de Express
+# Traemos la carpeta "dist" de Vue a la carpeta "public"
 COPY --from=frontend-builder /app/frontend/dist ./public
 
-# Exponemos el puerto de Express
 EXPOSE 3000
 
-# Iniciamos el servidor
 CMD ["npm", "start"]

@@ -35,31 +35,31 @@ app.use('/monitoring', monitoringRoutes);
 
 /* Mensaje del bot */
 app.post('/api/ai/consejo', async (req, res) => {
-  try {
-    const { consulta } = req.body?.datos || {};
+    try {
+        const { consulta } = req.body?.datos || {};
 
-    if (!consulta) {
-      return res.status(400).json({ error: 'No se proporcionó una consulta.' });
+        if (!consulta) {
+            return res.status(400).json({ error: 'No se proporcionó una consulta.' });
+        }
+
+        // Llamamos a la función delegada al servicio externo
+        const texto = await aiService.obtenerConsejoPowerBot(consulta);
+
+        res.json({ mensaje: texto });
+
+    } catch (error) {
+        console.error('Error en PowerBot:', error.message);
+        res.status(500).json({ error: 'Error en el servicio de PowerBot.' });
     }
-
-    // Llamamos a la función delegada al servicio externo
-    const texto = await aiService.obtenerConsejoPowerBot(consulta);
-
-    res.json({ mensaje: texto });
-
-  } catch (error) {
-    console.error('Error en PowerBot:', error.message);
-    res.status(500).json({ error: 'Error en el servicio de PowerBot.' });
-  }
 });
 
 // Cualquier ruta GET que no coincida con los endpoints de arriba,
 // será redirigida al index.html del frontend para que Vue Router la maneje.
 app.get(/(.*)/, (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+    res.sendFile(path.join(distPath, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor de PowerTech corriendo en el puerto ${PORT}`);
+    console.log(`Servidor de PowerTech corriendo en el puerto ${PORT}`);
 });
