@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useAlarmStore = defineStore("alarm", () => {
-  const API_BASE = "http://localhost:3000/alarm";
+  const API_BASE = "/alarm";
   const alarmas = ref([]);
   const loading = ref(false);
 

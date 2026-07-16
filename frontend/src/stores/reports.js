@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useReportStore = defineStore("report", () => {
-  const API_BASE = "http://localhost:3000/report";
+  const API_BASE = "/report";
   const reporteData = ref(null);
   const loading = ref(false);
 

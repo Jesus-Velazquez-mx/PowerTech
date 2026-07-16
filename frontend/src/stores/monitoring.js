@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useMonitoringStore = defineStore("device", () => {
-    const API_BASE = "http://localhost:3000/monitoring";
+    const API_BASE = "/monitoring";
     const lectura = ref([]);
     const loading = ref(false);
 

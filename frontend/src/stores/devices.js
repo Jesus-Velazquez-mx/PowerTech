@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useDeviceStore = defineStore("device", () => {
-  const API_BASE = "http://localhost:3000/device";
+  const API_BASE = "/device";
   const dispositivos = ref([]);
   const dispositivo = ref({});
   const loading = ref(false);

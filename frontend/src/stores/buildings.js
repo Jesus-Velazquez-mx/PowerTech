@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useBuildingStore = defineStore("building", () => {
-  const API_BASE = "http://localhost:3000/building";
+  const API_BASE = "/building";
   const edificios = ref([]);
   const edificio = ref({});
   const loading = ref(false);
@@ -39,15 +39,15 @@ export const useBuildingStore = defineStore("building", () => {
   // DELETE /building/:id
   // Borra un edificio de la base de datos
   const eliminarEdificio = ({ id, onComplete, onError }) => {
-  loading.value = true;
-  axios
-    .delete(`${API_BASE}/${id}`)
-    .then((res) => {
-      if (onComplete) onComplete(res);
-    })
-    .catch(onError)
-    .finally(() => (loading.value = false));
-};
+    loading.value = true;
+    axios
+      .delete(`${API_BASE}/${id}`)
+      .then((res) => {
+        if (onComplete) onComplete(res);
+      })
+      .catch(onError)
+      .finally(() => (loading.value = false));
+  };
 
   return {
     edificios,

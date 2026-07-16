@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useSensorStore = defineStore("sensor", () => {
-  const API_BASE = "http://localhost:3000/sensor";
+  const API_BASE = "/sensor";
   const sensores = ref([]);
   const sensor = ref({});
   const loading = ref(false);

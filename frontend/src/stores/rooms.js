@@ -3,7 +3,7 @@ import axios from "axios";
 import { ref } from "vue";
 
 export const useRoomStore = defineStore("room", () => {
-  const API_BASE = "http://localhost:3000/room";
+  const API_BASE = "/room";
   const salas = ref([]);
   const sala = ref({});
   const loading = ref(false);
