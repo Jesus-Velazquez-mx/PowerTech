@@ -62,7 +62,7 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: react-build
+        name: vue-build
         path: frontend/dist 
         
   docker-hub:
@@ -78,7 +78,7 @@ jobs:
     - name: Download Vue Build
       uses: actions/download-artifact@v4
       with:
-        name: react-build
+        name: vue-build
         path: frontend/dist
         
     - name: Build & Push Docker image to Docker Hub
@@ -90,3 +90,27 @@ jobs:
         dockerfile: Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+
+  deploy:
+      runs-on: ubuntu-latest
+      environment: Production
+      needs: [docker-hub] # Solo se ejecuta si la imagen se subió con éxito
+      steps:
+        - name: Conectar a AWS y actualizar Docker
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.AWS_HOST }} # La IP del servidor EC2
+            username: ubuntu # super usuario que viene con la imagen de AWS
+            key: ${{ secrets.AWS_SSH_KEY }} # La llave .pem de AWS
+            script: |
+              # 1. Descarga la imagen más reciente
+              docker pull jesusvelazquezmx/powertech:latest
+              
+              # 2. Borra el contenedor viejo
+              docker rm -f powertech || true
+              
+              # 3. Levanta el nuevo inyectando las contraseñas
+              docker run --name powertech -d -p 3000:3000 jesusvelazquezmx/powertech:latest
+              
+              # 4. Limpia la basura (imágenes viejas) para no llenar el disco duro
+              docker image prune -f
