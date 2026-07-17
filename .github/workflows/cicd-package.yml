@@ -104,13 +104,13 @@ jobs:
             key: ${{ secrets.AWS_SSH_KEY }} # La llave .pem de AWS
             script: |
               # 1. Descarga la imagen más reciente
-              docker pull jesusvelazquezmx/powertech:latest
+              sudo docker pull jesusvelazquezmx/powertech:latest
               
               # 2. Borra el contenedor viejo
-              docker rm -f powertech || true
+              sudo docker rm -f powertech || true
               
               # 3. Levanta el nuevo inyectando las contraseñas
-              docker run --name powertech -d -p 3000:3000 jesusvelazquezmx/powertech:latest
+              sudo docker run --name powertech -d -p 3000:3000 jesusvelazquezmx/powertech:latest
               
               # 4. Limpia la basura (imágenes viejas) para no llenar el disco duro
-              docker image prune -f
+              sudo docker image prune -f
