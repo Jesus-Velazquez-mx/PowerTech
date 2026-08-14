@@ -23,4 +23,8 @@ router.delete('/:id', sensorController.eliminar);
 // Actualiza el estado de un sensor (activo/inactivo)
 router.patch('/:id/estado', sensorController.actualizarEstado);
 
+// GET /sensor/:id/readings (NUEVO: Para la gráfica)
+// Obtiene las últimas lecturas de un sensor
+router.get('/:id/readings', sensorController.obtenerLecturas);
+
 module.exports = router;

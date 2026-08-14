@@ -1,6 +1,6 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
-    
+
     <div class="mb-6">
       <h1 class="text-h4 font-weight-bold">Administración rápida</h1>
       <p class="text-subtitle-2 text-grey-darken-1"> Bienvenido, {{ nombreFormateado || 'Usuario' }}</p>
@@ -12,18 +12,9 @@
       </h2>
 
       <v-row dense class="ga-0">
-        <v-col
-          v-for="item in seccion.items"
-          :key="item.label"
-          cols="6"
-          class="pa-1"
-        >
-          <v-card
-            class="pa-3 rounded-xl d-flex flex-column align-center justify-center standard-card"
-            elevation="0"
-            ripple
-            @click="item.accion"
-          >
+        <v-col v-for="item in seccion.items" :key="item.label" cols="6" class="pa-1">
+          <v-card class="pa-3 rounded-xl d-flex flex-column align-center justify-center standard-card" elevation="0"
+            ripple @click="item.accion">
             <v-icon size="40" color="grey-darken-4" class="mb-1">
               {{ item.icon }}
             </v-icon>
@@ -68,6 +59,12 @@ const menuAdministracion = [
       { label: 'Generar', icon: 'mdi-file-document-outline', accion: () => router.push('/reports/selection') },
       { label: 'Imprimir', icon: 'mdi-printer-eye', accion: () => router.push('/reports/selection') },
     ]
+  },
+  {
+    titulo: 'Conoce tu recibo de luz',
+    items: [
+      { label: 'Cómo leer tu recibo', icon: 'mdi-file-document-outline', accion: () => router.push('/reciboInfo') },
+    ]
   }
 ];
 
@@ -92,7 +89,7 @@ const nombreFormateado = computed(() => {
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
   transition: all 0.3s ease !important;
   box-shadow: none !important;
-  aspect-ratio: 1.8 / 1; 
+  aspect-ratio: 1.8 / 1;
   cursor: pointer;
 }
 

@@ -65,32 +65,7 @@ CREATE TABLE DISPOSITIVOS (
     ON DELETE CASCADE
     ON UPDATE RESTRICT
 ) ENGINE=InnoDB;
-
-/* =========================
-   Subtipos de DISPOSITIVOS
-========================= */
-CREATE TABLE COMPUTADORAS (
-  codigoDispositivo VARCHAR(10) NOT NULL,
-  PRIMARY KEY (codigoDispositivo),
-  CONSTRAINT FK_COMPUTADORAS_DISP
-    FOREIGN KEY (codigoDispositivo)
-    REFERENCES DISPOSITIVOS (codigoDispositivo)
-    ON DELETE CASCADE
-    ON UPDATE RESTRICT
-) ENGINE=InnoDB;
-
-CREATE TABLE AIRES_ACONDICIONADOS (
-  codigoDispositivo VARCHAR(10) NOT NULL,
-  tipoUnidad        VARCHAR(30)  NULL,
-  eficienciaSEER    DECIMAL(5,2) NULL,
-  PRIMARY KEY (codigoDispositivo),
-  CONSTRAINT FK_AIRES_DISP
-    FOREIGN KEY (codigoDispositivo)
-    REFERENCES DISPOSITIVOS (codigoDispositivo)
-    ON DELETE CASCADE
-    ON UPDATE RESTRICT
-) ENGINE=InnoDB;
-
+  
 /* =========================
    SENSORES
 ========================= */

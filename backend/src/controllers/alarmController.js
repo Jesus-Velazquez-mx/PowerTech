@@ -35,6 +35,22 @@ function obtenerAlarmasPorUsuario(req, res) {
   }
 }
 
+// PATCH /notification/:id/estado
+function actualizarEstado(req, res) {
+  if (connection) {
+    const { id } = req.params;
+    const { estado } = req.body;
+
+    const sql = 'UPDATE ALARMAS SET estado = ? WHERE codigoAlarma = ?';
+
+    connection.query(sql, [estado, id], (err, result) => {
+      if (err) return res.status(500).json(err);
+      res.json({ error: false, mensaje: "Estado de la alarma actualizado correctamente" });
+    });
+  }
+}
+
 module.exports = {
-  obtenerAlarmasPorUsuario
+  obtenerAlarmasPorUsuario,
+  actualizarEstado
 };

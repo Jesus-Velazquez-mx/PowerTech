@@ -18,4 +18,7 @@ router.delete('/:id', deviceController.eliminar);
 // Obtiene la lista de todos los dispositivos de un usuario
 router.get('/user/:id', deviceController.listarPorUsuario);
 
+router.get('/room/:id/available-sensors', deviceController.listarSensoresLibres);
+router.patch('/:id/sensor', deviceController.asignarSensor);
+
 module.exports = router;

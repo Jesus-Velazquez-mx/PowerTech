@@ -1,34 +1,29 @@
 const connection = require('../config/connection');
 
-/* Validación */
+/* Validación general de dispositivo */
 function validarDispositivo(datos) {
   const errores = [];
-  const { codigoDispositivo, codigoSala, nombre, tipo } = datos;
+  const { codigoDispositivo, codigoSala, nombre } = datos;
 
   if (!codigoDispositivo || !codigoDispositivo.trim()) errores.push("El código del dispositivo es obligatorio");
   if (codigoDispositivo && codigoDispositivo.length > 10) errores.push("El código no debe superar los 10 caracteres");
-
   if (!codigoSala || !codigoSala.trim()) errores.push("El código de la sala es obligatorio");
-  
   if (!nombre || !nombre.trim()) errores.push("El nombre es obligatorio");
   if (nombre && nombre.length > 100) errores.push("El nombre no debe superar los 100 caracteres");
-
-  if (!tipo || !['C', 'A'].includes(tipo)) errores.push("Tipo de dispositivo inválido (debe ser 'C' o 'A')");
 
   return errores;
 }
 
 // GET /device/room/:id
-// Lista todos los dispositivos de una sala específica, incluyendo sus sensores y la última lectura
 function listarPorSala(req, res) {
   if (connection) {
-    const { id } = req.params; // codigoSala
-    
-    // Consulta optimizada para traer dispositivos, sensores y solo la lectura más reciente
+    const { id } = req.params;
+
+    // Consulta simplificada sin el campo 'tipo' y trayendo el sensor único vinculado
     const sql = `
       SELECT 
-        d.codigoDispositivo, d.codigoSala, d.nombre AS nombreDispositivo, d.marca, d.tipo,
-        s.codigoSensor, s.nombreSensor, s.tipoSensor, s.unidadMedida, s.activo,
+        d.codigoDispositivo, d.codigoSala, d.nombre AS nombreDispositivo, d.marca,
+        s.codigoSensor, s.nombreSensor, s.unidadMedida, s.activo,
         l.fechaHora, l.valor
       FROM DISPOSITIVOS d
       LEFT JOIN SENSORES s ON d.codigoDispositivo = s.codigoDispositivo
@@ -42,49 +37,40 @@ function listarPorSala(req, res) {
     `;
 
     connection.query(sql, [id], (err, rows) => {
-      if (err) {
-        res.status(500).json(err);
-      } else {
-        // Agrupamos los datos para estructurarlos limpiamente
-        const dispositivosMap = {};
+      if (err) return res.status(500).json(err);
 
-        rows.forEach(row => {
-          // Si el dispositivo aún no existe en nuestro mapa, lo creamos
-          if (!dispositivosMap[row.codigoDispositivo]) {
-            dispositivosMap[row.codigoDispositivo] = {
-              codigoDispositivo: row.codigoDispositivo,
-              codigoSala: row.codigoSala,
-              nombre: row.nombreDispositivo,
-              marca: row.marca,
-              tipo: row.tipo,
-              sensores: [] // Arreglo para guardar sus sensores y lecturas
-            };
-          }
+      const dispositivosMap = {};
+      rows.forEach(row => {
+        if (!dispositivosMap[row.codigoDispositivo]) {
+          dispositivosMap[row.codigoDispositivo] = {
+            codigoDispositivo: row.codigoDispositivo,
+            codigoSala: row.codigoSala,
+            nombre: row.nombreDispositivo,
+            marca: row.marca,
+            sensor: null // Ahora es un solo objeto, no un arreglo
+          };
+        }
 
-          // Si el dispositivo tiene un sensor asociado en esta fila, lo añadimos
-          if (row.codigoSensor) {
-            dispositivosMap[row.codigoDispositivo].sensores.push({
-              codigoSensor: row.codigoSensor,
-              nombreSensor: row.nombreSensor,
-              tipoSensor: row.tipoSensor,
-              unidadMedida: row.unidadMedida,
-              activo: row.activo,
-              ultimaLectura: row.valor !== null ? {
-                valor: row.valor,
-                fechaHora: row.fechaHora
-              } : null
-            });
-          }
-        });
+        if (row.codigoSensor) {
+          dispositivosMap[row.codigoDispositivo].sensor = {
+            codigoSensor: row.codigoSensor,
+            nombreSensor: row.nombreSensor,
+            unidadMedida: row.unidadMedida,
+            activo: row.activo,
+            ultimaLectura: row.valor !== null ? {
+              valor: row.valor,
+              fechaHora: row.fechaHora
+            } : null
+          };
+        }
+      });
 
-        const dataFinal = Object.values(dispositivosMap);
-
-        res.json({
-          error: false,
-          data: dataFinal,
-          mensaje: dataFinal.length > 0 ? "Dispositivos y lecturas recuperados" : "No hay dispositivos en esta sala"
-        });
-      }
+      const dataFinal = Object.values(dispositivosMap);
+      res.json({
+        error: false,
+        data: dataFinal,
+        mensaje: dataFinal.length > 0 ? "Dispositivos recuperados" : "No hay dispositivos"
+      });
     });
   }
 }
@@ -95,44 +81,60 @@ function crear(req, res) {
     const datos = req.body;
     const errores = validarDispositivo(datos);
 
-    if (errores.length > 0) {
-      return res.status(400).json({ error: true, mensaje: "Datos inválidos", detalles: errores });
-    }
+    if (errores.length > 0) return res.status(400).json({ error: true, mensaje: "Datos inválidos", detalles: errores });
 
-    // Verificar duplicado
     const sqlCheck = 'SELECT codigoDispositivo FROM DISPOSITIVOS WHERE codigoDispositivo = ?';
     connection.query(sqlCheck, [datos.codigoDispositivo], (err, results) => {
       if (err) return res.status(500).json(err);
       if (results.length > 0) return res.status(400).json({ error: true, mensaje: "Este código ya existe" });
 
-      // Insertar en la tabla base DISPOSITIVOS
       const dispData = {
         codigoDispositivo: datos.codigoDispositivo,
         codigoSala: datos.codigoSala,
         nombre: datos.nombre,
-        marca: datos.marca,
-        tipo: datos.tipo
+        marca: datos.marca || ''
       };
 
       connection.query('INSERT INTO DISPOSITIVOS SET ?', dispData, (err) => {
         if (err) return res.status(500).json(err);
 
-        // Insertar en la tabla del subtipo correspondiente
-        let sqlSub = '';
-        let subData = { codigoDispositivo: datos.codigoDispositivo };
-
-        if (datos.tipo === 'C') {
-          sqlSub = 'INSERT INTO COMPUTADORAS SET ?';
+        // Si se envió un sensor para vincular desde la creación
+        if (datos.codigoSensor) {
+          const sqlVincular = 'UPDATE SENSORES SET codigoDispositivo = ? WHERE codigoSensor = ?';
+          connection.query(sqlVincular, [datos.codigoDispositivo, datos.codigoSensor], (err) => {
+            if (err) return res.status(500).json(err);
+            res.json({ error: false, mensaje: "Dispositivo registrado y sensor vinculado" });
+          });
         } else {
-          sqlSub = 'INSERT INTO AIRES_ACONDICIONADOS SET ?';
-          subData.tipoUnidad = datos.tipoUnidad;
-          subData.eficienciaSEER = datos.eficienciaSEER;
+          res.json({ error: false, mensaje: "Dispositivo registrado correctamente sin sensor" });
         }
+      });
+    });
+  }
+}
 
-        connection.query(sqlSub, subData, (err) => {
-          if (err) return res.status(500).json(err);
-          res.json({ error: false, mensaje: "Dispositivo registrado correctamente" });
-        });
+// PATCH /device/:id/sensor (NUEVO: Para reasignar el sensor desde la tarjeta)
+function asignarSensor(req, res) {
+  if (connection) {
+    const { id } = req.params; // codigoDispositivo
+    const { codigoSensor } = req.body; // El nuevo sensor a vincular
+
+    // 1. Desvincular cualquier sensor que ya tuviera este dispositivo (Relación 1:1)
+    const sqlDesvincular = 'UPDATE SENSORES SET codigoDispositivo = NULL WHERE codigoDispositivo = ?';
+
+    connection.query(sqlDesvincular, [id], (err) => {
+      if (err) return res.status(500).json(err);
+
+      // Si el usuario eligió "Ninguno" (null o vacío), terminamos aquí
+      if (!codigoSensor) {
+        return res.json({ error: false, mensaje: "Sensor desvinculado del dispositivo" });
+      }
+
+      // 2. Vincular el nuevo sensor al dispositivo
+      const sqlVincular = 'UPDATE SENSORES SET codigoDispositivo = ? WHERE codigoSensor = ?';
+      connection.query(sqlVincular, [id, codigoSensor], (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ error: false, mensaje: "Sensor asignado correctamente" });
       });
     });
   }
@@ -141,20 +143,14 @@ function crear(req, res) {
 // DELETE /device/:id
 function eliminar(req, res) {
   if (connection) {
-    const { id } = req.params; // codigoDispositivo
+    const { id } = req.params;
 
-    // Limpiar alarmas de los sensores de este dispositivo debido a ON DELETE RESTRICT
-    const sqlAlarmas = `
-      DELETE FROM ALARMAS 
-      WHERE codigoSensor IN (SELECT codigoSensor FROM SENSORES WHERE codigoDispositivo = ?)
-    `;
-
-    connection.query(sqlAlarmas, [id], (err) => {
+    // Primero, liberar el sensor dejándolo huérfano (para no borrar su historial)
+    connection.query('UPDATE SENSORES SET codigoDispositivo = NULL WHERE codigoDispositivo = ?', [id], (err) => {
       if (err) return res.status(500).json(err);
 
       // Eliminar el dispositivo
-      // Las tablas COMPUTADORAS, AIRES_ACONDICIONADOS y SENSORES se borran por CASCADE
-      connection.query('DELETE FROM DISPOSITIVOS WHERE codigoDispositivo = ?', [id], (err, result) => {
+      connection.query('DELETE FROM DISPOSITIVOS WHERE codigoDispositivo = ?', [id], (err) => {
         if (err) return res.status(500).json(err);
         res.json({ error: false, mensaje: "Dispositivo eliminado" });
       });
@@ -163,37 +159,78 @@ function eliminar(req, res) {
 }
 
 // GET /device/user/:id
-// Lista todos los dispositivos de todos los edificios de un usuario
+// GET /device/user/:id
 function listarPorUsuario(req, res) {
   if (connection) {
-    const { id } = req.params; // idUsuario
-    
-    // Unimos DISPOSITIVOS con SALAS y EDIFICIOS para filtrar por el dueño
+    const { id } = req.params;
+
     const sql = `
-      SELECT d.codigoDispositivo, d.nombre, d.tipo
+      SELECT 
+        d.codigoDispositivo, d.codigoSala, d.nombre AS nombreDispositivo, d.marca,
+        sa.nombreSala, e.nombreEdificio,
+        s.codigoSensor, s.nombreSensor, s.unidadMedida, s.activo
       FROM DISPOSITIVOS d
-      INNER JOIN SALAS s ON d.codigoSala = s.codigoSala
-      INNER JOIN EDIFICIOS e ON s.codigoEdificio = e.codigoEdificio
+      INNER JOIN SALAS sa ON d.codigoSala = sa.codigoSala
+      INNER JOIN EDIFICIOS e ON sa.codigoEdificio = e.codigoEdificio
+      LEFT JOIN SENSORES s ON d.codigoDispositivo = s.codigoDispositivo
       WHERE e.idUsuario = ?
     `;
 
     connection.query(sql, [id], (err, rows) => {
-      if (err) {
-        res.status(500).json(err);
-      } else {
-        res.json({
-          error: false,
-          data: rows,
-          mensaje: rows.length > 0 ? "Dispositivos globales recuperados" : "No tienes dispositivos registrados"
-        });
-      }
+      if (err) return res.status(500).json(err);
+
+      // Agrupamos los datos exactamente igual que en listarPorSala
+      const dispositivosMap = {};
+      rows.forEach(row => {
+        if (!dispositivosMap[row.codigoDispositivo]) {
+          dispositivosMap[row.codigoDispositivo] = {
+            codigoDispositivo: row.codigoDispositivo,
+            codigoSala: row.codigoSala,
+            nombreSala: row.nombreSala,
+            nombreEdificio: row.nombreEdificio,
+            nombre: row.nombreDispositivo,
+            marca: row.marca,
+            sensor: null
+          };
+        }
+
+        if (row.codigoSensor) {
+          dispositivosMap[row.codigoDispositivo].sensor = {
+            codigoSensor: row.codigoSensor,
+            nombreSensor: row.nombreSensor,
+            unidadMedida: row.unidadMedida,
+            activo: row.activo
+          };
+        }
+      });
+
+      const dataFinal = Object.values(dispositivosMap);
+      res.json({ error: false, data: dataFinal, mensaje: dataFinal.length > 0 ? "Recuperados" : "Sin dispositivos" });
     });
   }
 }
+
+// GET /device/room/:id/available-sensors (NUEVO: Obtener sensores libres en la sala)
+function listarSensoresLibres(req, res) {
+  if (connection) {
+    const { id } = req.params; // codigoSala
+    // Retorna sensores que no tienen dispositivo asignado, pero podrías ajustar según tu lógica de BD
+    const sql = 'SELECT codigoSensor, nombreSensor FROM SENSORES WHERE codigoDispositivo IS NULL';
+
+    connection.query(sql, [id], (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json({ error: false, data: rows });
+    });
+  }
+}
+
+
 
 module.exports = {
   listarPorSala,
   crear,
   eliminar,
-  listarPorUsuario
+  listarPorUsuario,
+  asignarSensor,
+  listarSensoresLibres
 };

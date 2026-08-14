@@ -19,9 +19,20 @@ export const useAlarmStore = defineStore("alarm", () => {
       .finally(() => (loading.value = false));
   };
 
+  const atenderAlarma = ({ id, onComplete, onError }) => {
+    loading.value = true;
+    axios
+      .patch(`${API_BASE}/${id}/estado`, { estado: 'ATENDIDA' }).then((res) => {
+        if (onComplete) onComplete(res);
+      })
+      .catch(onError)
+      .finally(() => (loading.value = false));
+  };
+
   return {
     alarmas,
     loading,
-    listarAlarmas
+    listarAlarmas,
+    atenderAlarma
   };
 });

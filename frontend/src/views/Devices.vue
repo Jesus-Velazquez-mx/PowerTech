@@ -1,10 +1,10 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
-    
+
     <!-- Titulo -->
     <div class="mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" color="blue-darken-2" @click="$router.back()"></v-btn>
-      <span class="text-subtitle-1 font-weight-bold ml-2">Volver a salas</span>     
+      <span class="text-subtitle-1 font-weight-bold ml-2">Volver a salas</span>
       <h1 class="text-h4 font-weight-bold">Mis dispositivos</h1>
       <p class="text-subtitle-2 text-grey-darken-1">Sala: {{ $route.params.id }}</p>
     </div>
@@ -17,10 +17,8 @@
     </v-row>
 
     <!-- Placeholder por si no hay dispositivos -->
-    <v-card 
-      v-else-if="!dispositivos || dispositivos.length === 0"
-      class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed w-100"
-    >
+    <v-card v-else-if="!dispositivos || dispositivos.length === 0"
+      class="pa-8 text-center rounded-xl bg-transparent elevation-0 border-dashed w-100">
       <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-devices</v-icon>
       <div class="text-h6 text-grey-darken-2">No hay equipos</div>
       <div class="text-body-2 text-grey">Aún no has registrado dispositivos en esta sala.</div>
@@ -29,171 +27,98 @@
     <div v-else>
       <v-row>
         <!-- Tarjetas de dispositivos -->
-        <v-col 
-          v-for="item in dispositivos" 
-          :key="item.codigoDispositivo"
-          cols="6" 
-          sm="4"
-        >
-          <v-card 
-            class="device-card pa-4 rounded-xl text-center h-100 d-flex flex-column align-center justify-center" 
-            elevation="0"
-            hover
-            @click="abrirModalDetalles(item)"
-          >
-          <!-- Botón de eliminar -->
-          <v-btn
-              icon="mdi-close-circle"
-              variant="text"
-              color="red-lighten-2"
-              size="small"
-              class="delete-btn"
-              @click.stop="confirmarEliminar(item.codigoDispositivo)"
-            ></v-btn>
+        <v-col v-for="item in dispositivos" :key="item.codigoDispositivo" cols="6" sm="4">
+          <v-card class="device-card pa-4 rounded-xl text-center d-flex flex-column align-center justify-start"
+            elevation="0" hover @click="abrirModalDetalles(item)">
 
-            <!-- Icono representativo del tipo de dispositivo -->
-            <v-avatar color="blue-lighten-5" size="64" class="mb-3">
-              <v-icon size="32" color="blue-darken-2">
-                {{ item.tipo === 'C' ? 'mdi-laptop' : 'mdi-air-conditioner' }}
-              </v-icon>
+            <!-- Botón de eliminar -->
+            <v-btn icon="mdi-close-circle" variant="text" color="red-lighten-2" size="small" class="delete-btn"
+              @click.stop="confirmarEliminar(item.codigoDispositivo)"></v-btn>
+
+            <!-- Icono general de dispositivo -->
+            <v-avatar :color="item.sensor ? 'blue-lighten-5' : 'grey-lighten-4'" size="56" class="mb-2 mt-2">
+              <v-icon size="28" :color="item.sensor ? 'blue-darken-2' : 'grey'">mdi-developer-board</v-icon>
             </v-avatar>
-            
-            <!-- Código y nombre del dispositivo -->
-            <div class="text-caption font-weight-bold text-blue-darken-2 text-uppercase">
+
+            <!-- Código -->
+            <div class="text-caption font-weight-bold text-blue-darken-2 text-uppercase mb-1">
               {{ item.codigoDispositivo }}
             </div>
-            <div class="text-subtitle-2 font-weight-bold text-grey-darken-2 text-truncate w-100 px-1">
+
+            <!-- Nombre del dispositivo -->
+            <div class="text-subtitle-2 font-weight-bold text-grey-darken-3 text-truncate w-100 px-1 mb-1"
+              style="line-height: 1.1;">
               {{ item.nombre }}
             </div>
+
+            <v-spacer></v-spacer>
+
+            <!-- Sensor vinculado (NUEVO) -->
+            <div class="text-caption text-truncate w-100 px-1 mt-auto font-weight-medium"
+              :class="item.sensor ? 'text-green-darken-3' : 'text-grey-darken-1'" style="line-height: 1.1;">
+              <v-icon size="12" class="mr-1 pb-1">{{ item.sensor ? 'mdi-access-point' : 'mdi-link-off' }}</v-icon>
+              {{ item.sensor ? item.sensor.nombreSensor : 'Sin sensor' }}
+            </div>
+
           </v-card>
         </v-col>
       </v-row>
     </div>
 
     <div class="fab-container">
-      <!-- Botón flotante para agregar nuevo dispositivo -->
-      <v-btn
-        color="blue-darken-2"
-        icon="mdi-plus"
-        size="large"
-        elevation="4"
-        @click="dialogoVisible = true"
-      ></v-btn>
+      <v-btn color="blue-darken-2" icon="mdi-plus" size="large" elevation="4" @click="dialogoVisible = true"></v-btn>
     </div>
 
-    <!-- Modal para agregar nuevo dispositivo -->
+    <!-- MODAL: AGREGAR NUEVO DISPOSITIVO -->
     <v-dialog v-model="dialogoVisible" max-width="500px" persistent>
       <v-card class="rounded-xl pa-4 elevation-12">
-        <!-- Titulo -->
         <v-card-title class="text-h5 font-weight-bold text-center" style="color: #3b6fb6;">
-          Nuevo Dispositivo
+          Nuevo Equipo
         </v-card-title>
-        
+
         <v-card-text>
           <v-form ref="formRef" v-model="formValido">
-            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 text-grey-darken-2">Tipo de Dispositivo</div>
-            <!-- Seleccionar tipo de dispositivo-->
-            <v-select
-              v-model="nuevoDispositivo.tipo"
-              :items="categorias"
-              item-title="text"
-              item-value="value"
-              variant="outlined"
-              density="comfortable"
-              rounded="lg"
-              :rules="[v => !!v || 'Selecciona una categoría']"
-              required
-            ></v-select>
-            
-            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Código</div>
-            <!-- Codigo -->
-            <v-text-field
-              v-model="nuevoDispositivo.codigoDispositivo"
-              placeholder="Ej: PC-01"
-              variant="outlined"
-              density="comfortable"
-              rounded="lg"
-              :rules="reglas.codigo"
-              required
-            />
 
-            <!-- Nombre-->
+            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Código del Equipo</div>
+            <v-text-field v-model="nuevoDispositivo.codigoDispositivo" placeholder="Ej: EQ-01" variant="outlined"
+              density="comfortable" rounded="lg" :rules="reglas.codigo" required />
+
             <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Nombre / Etiqueta</div>
-            <v-text-field
-              v-model="nuevoDispositivo.nombre"
-              placeholder="Ej: Estación de trabajo 1"
-              variant="outlined"
-              density="comfortable"
-              rounded="lg"
-              :rules="reglas.nombre"
-              required
-            />
+            <v-text-field v-model="nuevoDispositivo.nombre" placeholder="Ej: Servidor Principal" variant="outlined"
+              density="comfortable" rounded="lg" :rules="reglas.nombre" required />
 
-            <template v-if="nuevoDispositivo.tipo === 'A'">
-              <v-row>
-                <v-col cols="6">
-                  <!-- Tipo de unidad (ej: Minisplit, Ventana, etc) -->
-                  <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Unidad</div>
-                  <v-text-field
-                    v-model="nuevoDispositivo.tipoUnidad"
-                    placeholder="Minisplit"
-                    variant="outlined"
-                    density="comfortable"
-                    rounded="lg"
-                  />
-                </v-col>
-                <v-col cols="6">
-                  <!-- Eficiencia SEER -->
-                <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">SEER</div>
-                  <v-text-field
-                    v-model="nuevoDispositivo.eficienciaSEER"
-                    type="number"
-                    variant="outlined"
-                    density="comfortable"
-                    rounded="lg"
-                  />
-                </v-col>
-              </v-row>
-            </template>
+            <div class="text-subtitle-2 font-weight-bold mb-1 ml-1 mt-2 text-grey-darken-2">Vincular Sensor (Opcional)
+            </div>
+            <v-select v-model="nuevoDispositivo.codigoSensor" :items="sensoresDisponibles" item-title="nombreSensor"
+              item-value="codigoSensor" placeholder="Seleccionar sensor disponible" variant="outlined"
+              density="comfortable" rounded="lg" clearable></v-select>
+
           </v-form>
         </v-card-text>
 
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <!-- Botón para cancelar -->
           <v-btn variant="text" color="black" @click="cerrarModal" class="text-none">Cancelar</v-btn>
-          <!-- Botón para guardar nuevo dispositivo -->
-          <v-btn 
-            color="blue-darken-2" 
-            class="text-none rounded-pill px-6" 
-            variant="flat"
-            :disabled="!formValido"
-            :loading="loading"
-            @click="guardarDispositivo"
-          >
+          <v-btn color="blue-darken-2" class="text-none rounded-pill px-6" variant="flat" :disabled="!formValido"
+            :loading="loading" @click="guardarDispositivo">
             Guardar
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
+    <!-- MODAL: GESTIONAR DISPOSITIVO Y SENSOR -->
     <v-dialog v-model="dialogoDetallesVisible" max-width="500px">
-      <!-- Modal para mostrar detalles del dispositivo seleccionado -->
       <v-card class="rounded-xl pa-4 elevation-12">
-        <!-- Titulo -->
         <v-card-title class="text-h5 font-weight-bold text-center mb-2" style="color: #3b6fb6;">
-          Detalles del Equipo
+          Gestión del Equipo
         </v-card-title>
-        
+
         <v-card-text class="pt-2" v-if="dispositivoSeleccionado">
           <div class="d-flex align-center mb-6">
-            <!-- Icono representativo del tipo de dispositivo -->
             <v-avatar color="blue-lighten-5" size="56" class="mr-4">
-              <v-icon size="28" color="blue-darken-2">
-                {{ dispositivoSeleccionado.tipo === 'C' ? 'mdi-laptop' : 'mdi-air-conditioner' }}
-              </v-icon>
+              <v-icon size="28" color="blue-darken-2">mdi-developer-board</v-icon>
             </v-avatar>
-            <!-- Código y nombre del dispositivo -->
             <div>
               <div class="text-subtitle-1 font-weight-bold text-grey-darken-3" style="line-height: 1.2;">
                 {{ dispositivoSeleccionado.nombre }}
@@ -206,55 +131,40 @@
 
           <v-divider class="mb-4"></v-divider>
 
-          <div class="text-subtitle-2 font-weight-bold mb-3 text-grey-darken-2">Sensores y Lecturas</div>
-          
-          <!-- Si no hay sensores vinculados al dispositivo -->
-          <div v-if="!dispositivoSeleccionado.sensores || dispositivoSeleccionado.sensores.length === 0" class="text-center pa-4 text-grey">
-            <v-icon size="32" class="mb-2">mdi-leak-off</v-icon>
-            <div class="text-caption">No hay sensores vinculados</div>
-          </div>
-          
-          <div v-else>
-            <!-- Listado de sensores con su última lectura -->
-            <v-card 
-              v-for="sensor in dispositivoSeleccionado.sensores" 
-              :key="sensor.codigoSensor"
-              class="mb-3 pa-3 rounded-lg"
-              style="background-color: #f8f9fb; border: 1px solid rgba(0,0,0,0.05);"
-              elevation="0"
-            >
-              <div class="d-flex justify-space-between align-center mb-1">
-                <!-- Nombre del sensor con icono -->
-                <span class="text-body-2 font-weight-bold text-grey-darken-3">
-                  <v-icon size="16" color="grey-darken-1" class="mr-1">mdi-access-point</v-icon>
-                  {{ sensor.nombreSensor }}
-                </span>
-                
-                <!-- Última lectura del sensor -->
-                <span v-if="sensor.ultimaLectura" class="text-subtitle-1 font-weight-black text-green-accent-4">
-                  {{ Number(sensor.ultimaLectura.valor).toFixed(1) }} {{ sensor.unidadMedida }}
-                </span>
-                <span v-else class="text-caption text-grey">Sin datos</span>
-              </div>
-              
-              <!-- Fecha de la última lectura -->
-              <div class="text-caption text-grey-darken-1 mt-1 text-right">
-                <v-icon size="12" class="mr-1">mdi-clock-outline</v-icon>
-                {{ formatearFecha(sensor.ultimaLectura?.fechaHora) }}
-              </div>
-            </v-card>
-          </div>
+          <div class="text-subtitle-2 font-weight-bold mb-3 text-grey-darken-2">Reasignar Sensor Vinculado</div>
+
+          <v-select v-model="sensorTemporal" :items="opcionesSensoresDetalle" item-title="nombreSensor"
+            item-value="codigoSensor" placeholder="No hay sensor asignado" variant="outlined" density="comfortable"
+            rounded="lg" clearable></v-select>
+
+          <!-- Lectura del sensor actual (si aplica) -->
+          <v-card v-if="dispositivoSeleccionado.sensor" class="mt-4 pa-3 rounded-lg"
+            style="background-color: #f8f9fb; border: 1px solid rgba(0,0,0,0.05);" elevation="0">
+            <div class="d-flex justify-space-between align-center mb-1">
+              <span class="text-body-2 font-weight-bold text-grey-darken-3">
+                <v-icon size="16" color="grey-darken-1" class="mr-1">mdi-access-point</v-icon>
+                Última Lectura
+              </span>
+              <span v-if="dispositivoSeleccionado.sensor.ultimaLectura"
+                class="text-subtitle-1 font-weight-black text-green-accent-4">
+                {{ Number(dispositivoSeleccionado.sensor.ultimaLectura.valor).toFixed(1) }} {{
+                  dispositivoSeleccionado.sensor.unidadMedida }}
+              </span>
+              <span v-else class="text-caption text-grey">Sin datos</span>
+            </div>
+            <div class="text-caption text-grey-darken-1 mt-1 text-right">
+              {{ formatearFecha(dispositivoSeleccionado.sensor.ultimaLectura?.fechaHora) }}
+            </div>
+          </v-card>
+
         </v-card-text>
 
         <v-card-actions class="pa-4 pt-0">
           <v-spacer></v-spacer>
-          <v-btn 
-            color="blue-darken-2" 
-            class="text-none rounded-pill px-6" 
-            variant="flat"
-            @click="dialogoDetallesVisible = false"
-          >
-            Cerrar
+          <v-btn variant="text" color="black" @click="dialogoDetallesVisible = false" class="text-none">Cancelar</v-btn>
+          <v-btn color="blue-darken-2" class="text-none rounded-pill px-6" variant="flat"
+            @click="actualizarSensorDispositivo" :loading="loading">
+            Guardar Cambios
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -264,7 +174,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useDeviceStore } from "@/stores/devices"
@@ -276,69 +186,72 @@ const notify = useNotifyStore();
 
 const { dispositivos, loading } = storeToRefs(deviceStore);
 
-/* Estados para el Modal */
+/* Lista de sensores que no tienen ningún dispositivo asignado */
+const sensoresDisponibles = ref([]);
+
+/* Estados para el Modal Agregar */
 const dialogoVisible = ref(false);
 const formRef = ref(null);
 const formValido = ref(false);
-
-/* Estados para el Modal de Detalles */
-const dialogoDetallesVisible = ref(false);
-const dispositivoSeleccionado = ref(null);
-
-const categorias = [
-  { text: 'Computadora', value: 'C' },
-  { text: 'Aire Acondicionado', value: 'A' }
-];
 
 const nuevoDispositivo = ref({
   codigoDispositivo: '',
   codigoSala: route.params.id,
   nombre: '',
   marca: '',
-  tipo: 'C',
-  tipoUnidad: '',
-  eficienciaSEER: null
+  codigoSensor: null
 });
+
+/* Estados para el Modal Detalles (Reasignación) */
+const dialogoDetallesVisible = ref(false);
+const dispositivoSeleccionado = ref(null);
+const sensorTemporal = ref(null);
 
 /* Validaciones */
 const reglas = {
-  codigo: [
-    v => !!v || "Obligatorio",
-    v => (v && v.length <= 10) || "Máximo 10 caracteres"
-  ],
-  nombre: [
-    v => !!v || "Obligatorio",
-    v => (v && v.length <= 100) || "Máximo 100 caracteres"
-  ]
+  codigo: [v => !!v || "Obligatorio", v => (v && v.length <= 10) || "Máximo 10 caracteres"],
+  nombre: [v => !!v || "Obligatorio", v => (v && v.length <= 100) || "Máximo 100 caracteres"]
 };
 
-/* Formateador de fechas para las lecturas */
+/* Formateador de fechas */
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return "Esperando registro...";
-  const opciones = { 
-    day: '2-digit', month: 'short', 
-    hour: '2-digit', minute: '2-digit' 
-  };
+  const opciones = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' };
   return new Date(fechaISO).toLocaleDateString('es-MX', opciones);
 };
 
-/* Función para abrir detalles */
+/* Cargar sensores huérfanos desde el backend */
+const cargarSensoresLibres = async () => {
+  try {
+    const res = await deviceStore.obtenerSensoresLibres(route.params.id);
+    sensoresDisponibles.value = res.data;
+  } catch (error) {
+    console.error("Error al cargar sensores libres", error);
+  }
+};
+
+/* Opciones de sensores para el modal de detalles (Libres + El actual) */
+const opcionesSensoresDetalle = computed(() => {
+  const opciones = [...sensoresDisponibles.value];
+  if (dispositivoSeleccionado.value?.sensor) {
+    opciones.push({
+      codigoSensor: dispositivoSeleccionado.value.sensor.codigoSensor,
+      nombreSensor: `(Actual) ${dispositivoSeleccionado.value.sensor.nombreSensor}`
+    });
+  }
+  return opciones;
+});
+
 const abrirModalDetalles = (dispositivo) => {
   dispositivoSeleccionado.value = dispositivo;
+  // Pre-cargar el select con el sensor que ya tiene (si tiene uno)
+  sensorTemporal.value = dispositivo.sensor ? dispositivo.sensor.codigoSensor : null;
   dialogoDetallesVisible.value = true;
 };
 
 const cerrarModal = () => {
   dialogoVisible.value = false;
-  nuevoDispositivo.value = { 
-    codigoDispositivo: '', 
-    codigoSala: route.params.id, 
-    nombre: '', 
-    marca: '', 
-    tipo: 'C',
-    tipoUnidad: '',
-    eficienciaSEER: null
-  };
+  nuevoDispositivo.value = { codigoDispositivo: '', codigoSala: route.params.id, nombre: '', marca: '', codigoSensor: null };
   if (formRef.value) formRef.value.resetValidation();
 };
 
@@ -349,24 +262,38 @@ const guardarDispositivo = async () => {
   deviceStore.agregarDispositivo({
     datos: nuevoDispositivo.value,
     onComplete: () => {
-      notify.show("Dispositivo registrado", "success");
+      notify.show("Equipo registrado", "success");
       cerrarModal();
       deviceStore.listarDispositivosPorSala({ id: route.params.id });
+      cargarSensoresLibres(); // Actualizar la lista de sensores libres
     },
-    onError: (error) => {
-      const msg = error.response?.data?.mensaje || "Error al registrar";
-      notify.show(msg, "error");
-    }
+    onError: (error) => notify.show(error.response?.data?.mensaje || "Error al registrar", "error")
+  });
+};
+
+const actualizarSensorDispositivo = async () => {
+  // Lógica para enviar el PATCH al backend
+  deviceStore.asignarSensorADispositivo({
+    codigoDispositivo: dispositivoSeleccionado.value.codigoDispositivo,
+    codigoSensor: sensorTemporal.value,
+    onComplete: () => {
+      notify.show("Sensor actualizado", "success");
+      dialogoDetallesVisible.value = false;
+      deviceStore.listarDispositivosPorSala({ id: route.params.id });
+      cargarSensoresLibres();
+    },
+    onError: () => notify.show("Error al actualizar sensor", "error")
   });
 };
 
 const confirmarEliminar = (id) => {
-  if (confirm("¿Eliminar este dispositivo? Se borrarán sus sensores y alarmas relacionadas.")) {
+  if (confirm("¿Eliminar este equipo? El sensor asociado quedará libre.")) {
     deviceStore.eliminarDispositivo({
       id: id,
       onComplete: () => {
-        notify.show("Dispositivo eliminado", "success");
+        notify.show("Equipo eliminado", "success");
         deviceStore.listarDispositivosPorSala({ id: route.params.id });
+        cargarSensoresLibres();
       },
       onError: () => notify.show("Error al eliminar", "error")
     });
@@ -377,12 +304,12 @@ onMounted(() => {
   const salaId = route.params.id;
   if (salaId) {
     deviceStore.listarDispositivosPorSala({ id: salaId });
+    cargarSensoresLibres();
   }
 });
 </script>
 
 <style scoped>
-/* [REGLA DE CONSISTENCIA]: Mantener max-width 520px para alineación visual */
 .main-container {
   max-width: 520px;
   margin-left: auto;
@@ -390,14 +317,15 @@ onMounted(() => {
   padding-bottom: 120px;
 }
 
-/* [REGLA DE CONSISTENCIA]: Tarjetas con fondo #f8f9fb y animación táctil */
 .device-card {
-  aspect-ratio: 1 / 1;
+  /* Reemplazamos aspect-ratio por min-height */
+  min-height: 180px;
+  height: 100%;
   transition: transform 0.2s ease, background-color 0.2s ease;
   background-color: #f8f9fb !important;
   border: none !important;
   position: relative;
-  cursor: pointer; /* Añadido para que al pasar el mouse indique que se puede dar clic */
+  cursor: pointer;
 }
 
 .device-card:hover {

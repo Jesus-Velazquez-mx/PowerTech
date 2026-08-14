@@ -12,7 +12,7 @@
         <div class="text-subtitle-2 font-weight-bold text-grey-darken-2 mb-1">Ahorro estimado hoy</div>
         <!-- El ahorro es reactivo, no fijo -->
         <div class="text-h4 font-weight-black text-green-accent-4">
-        {{ ahorroPrediccion }}
+          {{ ahorroPrediccion }}
         </div>
       </div>
       <v-avatar color="blue-lighten-5" size="64">
@@ -23,25 +23,15 @@
     <v-row>
       <v-col cols="5">
         <!-- Reportes -->
-        <v-card
-          class="pa-4 rounded-xl mb-4 text-center d-flex flex-column align-center"
-          elevation="1"
-          ripple
-          tag="router-link"
-          :to="{ name: 'report-selection' }"
-        >
+        <v-card class="pa-4 rounded-xl mb-4 text-center d-flex flex-column align-center" elevation="1" ripple
+          tag="router-link" :to="{ name: 'report-selection' }">
           <v-icon size="40" class="mb-2">mdi-file-document-outline</v-icon>
           <span class="text-caption font-weight-bold">Reportes</span>
         </v-card>
 
         <!-- Edificios -->
-        <v-card
-          class="pa-4 rounded-xl text-center d-flex flex-column align-center"
-          elevation="1"
-          ripple
-          tag="router-link"
-          :to="{name: 'buildings'}"
-        >
+        <v-card class="pa-4 rounded-xl text-center d-flex flex-column align-center" elevation="1" ripple
+          tag="router-link" :to="{ name: 'buildings' }">
           <v-icon size="40" class="mb-2">mdi-office-building-outline</v-icon>
           <span class="text-caption font-weight-bold">Mis edificios</span>
         </v-card>
@@ -49,25 +39,18 @@
 
       <!-- Advertencias -->
       <v-col cols="7">
-        <v-card 
-          class="pa-6 rounded-xl fill-height text-center d-flex flex-column align-center justify-center" 
-          elevation="1"
-          ripple
-          tag="router-link"
-          :to="{name: 'notifications'}" 
-        > <div class="text-subtitle-1 font-weight-bold mb-4">Advertencias</div>
-          
-          <v-icon 
-            size="60" 
-            :color="alarmas.length > 0 ? 'red-darken-1' : 'grey-darken-1'" 
-            class="mb-4"
-          >
-            {{ alarmas.length > 0 ? 'mdi-alert-circle-outline' : 'mdi-thumb-up-outline' }}
+        <v-card class="pa-6 rounded-xl fill-height text-center d-flex flex-column align-center justify-center"
+          elevation="1" ripple tag="router-link" :to="{ name: 'notifications' }">
+          <div class="text-subtitle-1 font-weight-bold mb-4">Advertencias</div>
+
+          <!-- Usamos alarmasActivas -->
+          <v-icon size="60" :color="alarmasActivas.length > 0 ? 'red-darken-1' : 'grey-darken-1'" class="mb-4">
+            {{ alarmasActivas.length > 0 ? 'mdi-alert-circle-outline' : 'mdi-thumb-up-outline' }}
           </v-icon>
 
           <div class="text-caption text-grey-darken-1">
-            <template v-if="alarmas.length > 0">
-              Tienes <strong>{{ alarmas.length }}</strong> alertas activas
+            <template v-if="alarmasActivas.length > 0">
+              Tienes <strong>{{ alarmasActivas.length }}</strong> alertas activas
             </template>
             <template v-else>
               Nada de que preocuparse por aquí
@@ -90,6 +73,11 @@ const alarmStore = useAlarmStore();
 
 // Extraer alarmas de forma reactiva
 const { alarmas } = storeToRefs(alarmStore);
+
+// Filtramos únicamente las alarmas con estado 'ACTIVA'
+const alarmasActivas = computed(() => {
+  return alarmas.value?.filter(a => a.estado?.toUpperCase() === 'ACTIVA') || [];
+});
 
 const ahorro = ref(null);
 
@@ -118,7 +106,6 @@ const ahorroPrediccion = computed(() => {
   max-width: 520px;
   margin-left: auto;
   margin-right: auto;
-
 }
 
 /* Efecto para las tarjetas */

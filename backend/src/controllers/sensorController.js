@@ -9,7 +9,7 @@ function validarSensor(datos) {
   if (codigoSensor && codigoSensor.length > 10) errores.push("El código no debe superar los 10 caracteres");
 
   if (!codigoDispositivo || !codigoDispositivo.trim()) errores.push("El código del dispositivo es obligatorio");
-  
+
   if (!nombreSensor || !nombreSensor.trim()) errores.push("El nombre del sensor es obligatorio");
   if (nombreSensor && nombreSensor.length > 80) errores.push("El nombre no debe superar los 80 caracteres");
 
@@ -20,33 +20,22 @@ function validarSensor(datos) {
 }
 
 // GET /sensor/device/:id
-// Lista todos los sensores vinculados a un dispositivo específico
 function listarPorDispositivo(req, res) {
   if (connection) {
-    const { id } = req.params; // codigoDispositivo
+    const { id } = req.params;
     const sql = 'SELECT * FROM SENSORES WHERE codigoDispositivo = ?';
 
     connection.query(sql, [id], (err, rows) => {
-      if (err) {
-        res.status(500).json(err);
-      } else {
-        res.json({
-          error: false,
-          data: rows,
-          mensaje: rows.length > 0 ? "Sensores recuperados" : "Este dispositivo aún no tiene sensores registrados"
-        });
-      }
+      if (err) return res.status(500).json(err);
+      res.json({ error: false, data: rows, mensaje: rows.length > 0 ? "Sensores recuperados" : "Sin sensores" });
     });
   }
 }
 
 // GET /sensor/user/:id
-// Lista todos los sensores de todos los edificios de un usuario
 function listarPorUsuario(req, res) {
   if (connection) {
-    const { id } = req.params; // idUsuario
-    
-    // Consulta optimizada con INNER JOINs para navegar la jerarquía de la BD
+    const { id } = req.params;
     const sql = `
       SELECT 
         s.*, 
@@ -61,15 +50,8 @@ function listarPorUsuario(req, res) {
     `;
 
     connection.query(sql, [id], (err, rows) => {
-      if (err) {
-        res.status(500).json(err);
-      } else {
-        res.json({
-          error: false,
-          data: rows,
-          mensaje: rows.length > 0 ? "Sensores globales recuperados" : "No tienes sensores registrados"
-        });
-      }
+      if (err) return res.status(500).json(err);
+      res.json({ error: false, data: rows, mensaje: rows.length > 0 ? "Sensores globales recuperados" : "Sin sensores" });
     });
   }
 }
@@ -80,38 +62,16 @@ function crear(req, res) {
     const datos = req.body;
     const errores = validarSensor(datos);
 
-    if (errores.length > 0) {
-      return res.status(400).json({
-        error: true,
-        mensaje: "Datos del sensor inválidos",
-        detalles: errores
-      });
-    }
+    if (errores.length > 0) return res.status(400).json({ error: true, mensaje: "Datos inválidos", detalles: errores });
 
-    // Verificar si el código de sensor ya existe
     const sqlCheck = 'SELECT codigoSensor FROM SENSORES WHERE codigoSensor = ?';
     connection.query(sqlCheck, [datos.codigoSensor], (err, results) => {
       if (err) return res.status(500).json(err);
+      if (results.length > 0) return res.status(400).json({ error: true, mensaje: "Código ya registrado" });
 
-      if (results.length > 0) {
-        return res.status(400).json({
-          error: true,
-          mensaje: "Este código de sensor ya está registrado"
-        });
-      }
-
-      // Insertar el nuevo sensor
-      const sqlInsert = 'INSERT INTO SENSORES SET ?';
-      connection.query(sqlInsert, datos, (err, result) => {
-        if (err) {
-          res.status(500).json(err);
-        } else {
-          res.json({
-            error: false,
-            data: result,
-            mensaje: "Sensor agregado correctamente"
-          });
-        }
+      connection.query('INSERT INTO SENSORES SET ?', datos, (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json({ error: false, data: result, mensaje: "Sensor agregado correctamente" });
       });
     });
   }
@@ -120,25 +80,15 @@ function crear(req, res) {
 // DELETE /sensor/:id
 function eliminar(req, res) {
   if (connection) {
-    const { id } = req.params; // codigoSensor
-
-    // Eliminar alarmas vinculadas al sensor debido a ON DELETE RESTRICT
+    const { id } = req.params;
     const sqlAlarmas = 'DELETE FROM ALARMAS WHERE codigoSensor = ?';
-    
+
     connection.query(sqlAlarmas, [id], (err) => {
       if (err) return res.status(500).json(err);
-
-      // Eliminar el sensor
       const sqlSensor = 'DELETE FROM SENSORES WHERE codigoSensor = ?';
-      
       connection.query(sqlSensor, [id], (err, result) => {
         if (err) return res.status(500).json(err);
-
-        res.json({
-          error: false,
-          mensaje: "Sensor y sus dependencias eliminados con éxito",
-          data: result
-        });
+        res.json({ error: false, mensaje: "Sensor eliminado con éxito", data: result });
       });
     });
   }
@@ -149,11 +99,38 @@ function actualizarEstado(req, res) {
   if (connection) {
     const { id } = req.params;
     const { activo } = req.body;
-    
+
     const sql = 'UPDATE SENSORES SET activo = ? WHERE codigoSensor = ?';
     connection.query(sql, [activo, id], (err, result) => {
       if (err) return res.status(500).json(err);
       res.json({ error: false, mensaje: "Estado actualizado correctamente" });
+    });
+  }
+}
+
+// GET /sensor/:id/readings (NUEVO: Para alimentar la gráfica en tiempo real)
+function obtenerLecturas(req, res) {
+  if (connection) {
+    const { id } = req.params;
+    // Traemos las últimas 15 lecturas ordenadas por la más reciente
+    const sql = `
+      SELECT fechaHora, valor 
+      FROM LECTURAS 
+      WHERE codigoSensor = ? 
+      ORDER BY fechaHora DESC 
+      LIMIT 15
+    `;
+
+    connection.query(sql, [id], (err, rows) => {
+      if (err) return res.status(500).json(err);
+
+      // Volteamos el arreglo para que las lecturas más antiguas queden a la izquierda de la gráfica
+      const lecturasCronologicas = rows.reverse();
+
+      res.json({
+        error: false,
+        data: lecturasCronologicas
+      });
     });
   }
 }
@@ -163,5 +140,6 @@ module.exports = {
   listarPorUsuario,
   crear,
   actualizarEstado,
-  eliminar
+  eliminar,
+  obtenerLecturas
 };

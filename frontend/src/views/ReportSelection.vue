@@ -1,9 +1,9 @@
 <template>
   <v-container class="mt-8 px-4 main-container" fluid>
-    
+
     <v-btn icon="mdi-arrow-left" variant="text" color="blue-darken-2" @click="$router.back()"></v-btn>
-    <span class="text-subtitle-1 font-weight-bold ml-2">Regresar</span> 
-    <div class="text-center mb-10">  
+    <span class="text-subtitle-1 font-weight-bold ml-2">Regresar</span>
+    <div class="text-center mb-10">
       <h1 class="text-h3 font-weight-bold mb-2" style="color: #3b6fb6;">Generar Reporte</h1>
       <p class="text-subtitle-1 text-grey-darken-1">
         Selecciona la ubicación para visualizar los datos
@@ -12,50 +12,24 @@
 
     <v-card class="standard-card pa-6 rounded-xl" elevation="0">
       <v-form v-model="formValido">
-        
+
         <div class="text-subtitle-2 font-weight-bold mb-2 ml-1 text-grey-darken-3">Edificio</div>
-        <v-select
-          v-model="seleccion.edificioId"
-          :items="edificios"
-          item-title="nombreEdificio"
-          item-value="codigoEdificio"
-          placeholder="Selecciona una sede"
-          variant="outlined"
-          density="comfortable"
-          rounded="lg"
-          prepend-inner-icon="mdi-office-building-outline"
-          :loading="loadingBuildings"
-          @update:model-value="alCambiarEdificio"
-        ></v-select>
+        <v-select v-model="seleccion.edificioId" :items="edificios" item-title="nombreEdificio"
+          item-value="codigoEdificio" placeholder="Selecciona una sede" variant="outlined" density="comfortable"
+          rounded="lg" prepend-inner-icon="mdi-office-building-outline" :loading="loadingBuildings"
+          @update:model-value="alCambiarEdificio"></v-select>
 
         <div class="text-subtitle-2 font-weight-bold mb-2 ml-1 mt-4 text-grey-darken-3">Sala</div>
-        <v-select
-          v-model="seleccion.salaId"
-          :items="salas"
-          item-title="nombreSala"
-          item-value="codigoSala"
-          placeholder="Selecciona un espacio"
-          variant="outlined"
-          density="comfortable"
-          rounded="lg"
-          prepend-inner-icon="mdi-door-open"
-          :disabled="!seleccion.edificioId"
-          :loading="loadingRooms"
-        >
+        <v-select v-model="seleccion.salaId" :items="salas" item-title="nombreSala" item-value="codigoSala"
+          placeholder="Selecciona un espacio" variant="outlined" density="comfortable" rounded="lg"
+          prepend-inner-icon="mdi-door-open" :disabled="!seleccion.edificioId" :loading="loadingRooms">
           <template v-slot:item="{ props, item }">
             <v-list-item v-bind="props" :subtitle="item.raw.codigoSala"></v-list-item>
           </template>
         </v-select>
 
-        <v-btn
-          block
-          color="blue-darken-2"
-          size="large"
-          class="mt-8 text-none rounded-pill font-weight-bold"
-          elevation="2"
-          :disabled="!seleccion.edificioId || !seleccion.salaId"
-          @click="irAlReporte"
-        >
+        <v-btn block color="blue-darken-2" size="large" class="mt-8 text-none rounded-pill font-weight-bold"
+          elevation="2" :disabled="!seleccion.edificioId || !seleccion.salaId" @click="irAlReporte">
           Visualizar Reporte
         </v-btn>
       </v-form>
@@ -108,12 +82,12 @@ const alCambiarEdificio = (id) => {
  * Navega a la vista final del reporte con los parámetros
  */
 const irAlReporte = () => {
-  router.push({ 
-    name: 'reports', 
-    params: { 
-      buildingId: seleccion.edificioId, 
-      roomId: seleccion.salaId 
-    } 
+  router.push({
+    name: 'reports',
+    params: {
+      buildingId: seleccion.edificioId,
+      roomId: seleccion.salaId
+    }
   })
 }
 

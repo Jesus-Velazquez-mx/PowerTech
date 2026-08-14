@@ -2,12 +2,14 @@ const connection = require('../config/connection');
 
 /**
  * Obtiene las métricas consolidadas de una sala específica 
- * consultando la vista VISTA_REPORTE_SALA.
+ * consultando la vista VISTA_REPORTE_SALA_VER2.
  * GET /report/room/:id
  */
 function obtenerReportePorSala(req, res) {
   if (connection) {
     const { id } = req.params; /* codigoSala recibido desde la ruta */
+
+    // Se actualizó la vista y las columnas solicitadas
     const sql = `
       SELECT 
         codigoSala,
@@ -16,10 +18,10 @@ function obtenerReportePorSala(req, res) {
         nombreEdificio,
         indice_operatividad,
         total_dispositivos,
+        total_sensores,
         alarmas_activas,
-        cant_computadoras,
-        cant_aires
-      FROM VISTA_REPORTE_SALA
+        alarmas_historicas_resueltas
+      FROM VISTA_REPORTE_SALA_VER2
       WHERE codigoSala = ?
     `;
 
