@@ -92,6 +92,7 @@ function crear(req, res) {
         codigoDispositivo: datos.codigoDispositivo,
         codigoSala: datos.codigoSala,
         nombre: datos.nombre,
+        tipo: 'computadora',
         marca: datos.marca || ''
       };
 
