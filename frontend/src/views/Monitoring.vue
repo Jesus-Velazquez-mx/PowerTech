@@ -108,7 +108,7 @@
         </div>
         <div class="text-caption text-amber-darken-4 mt-2">
           <v-icon size="small">mdi-alert-outline</v-icon>
-          No son los datos finales del recibo de CFE; es una estimación con las lecturas registradas hasta ahora.
+          No son los datos finales del recibo de CFE; es una estimación con la lectura del inicio de cada hora registrada hasta ahora.
         </div>
         <v-btn block rounded="xl" color="green-darken-3" variant="flat" class="mt-4" prepend-icon="mdi-receipt-text"
           :disabled="!reporteRecibo" @click="dialogRecibo = true">

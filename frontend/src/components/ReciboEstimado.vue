@@ -10,7 +10,7 @@
             <v-icon color="#92400e" class="mr-2">mdi-alert-outline</v-icon>
             <div>
                 <strong>Reporte preliminar — estos NO son los datos finales del recibo.</strong>
-                Los montos se calculan con las lecturas de los dispositivos conectados registradas
+                Los montos se calculan con una lectura por hora (la del inicio de cada hora) de los dispositivos conectados,
                 <template v-if="reporte.ultimaLectura">hasta el {{ formatoFechaHora(reporte.ultimaLectura) }}</template>
                 <template v-else>hasta el momento</template>
                 y con cuotas de referencia. El importe que emita CFE puede variar por lecturas pendientes, la
@@ -378,8 +378,8 @@ const infoData = computed(() => ({
         title: 'Consumo y Demanda (GDMTH)',
         content: `
       <ul>
-        <li><strong>Base, Intermedia, Punta:</strong> El consumo de cada lectura se clasifica según los horarios configurados en Monitoreo.</li>
-        <li><strong>kW Max (Demanda):</strong> Se estima como la mayor energía acumulada en una hora (kWh en 1 h = kW promedio). El medidor de CFE usa intervalos de 15 min, por lo que el valor real suele ser algo mayor.</li>
+        <li><strong>Base, Intermedia, Punta:</strong> Se toma la lectura del inicio de cada hora (5:00, 6:00, 7:00...) y se clasifica según los horarios configurados en Monitoreo.</li>
+        <li><strong>kW Max (Demanda):</strong> Se estima como la mayor lectura horaria del mes (kWh en 1 h = kW promedio). El medidor de CFE usa intervalos de 15 min, por lo que el valor real suele ser algo mayor.</li>
         <li><strong>kVArh / F.P.:</strong> Los sensores no miden energía reactiva, por eso el factor de potencia es un supuesto editable.</li>
       </ul>`
     },
@@ -387,8 +387,8 @@ const infoData = computed(() => ({
         title: 'Consumo y Demanda (GDMTO)',
         content: `
       <ul>
-        <li><strong>Energía (kWh):</strong> Suma de todas las lecturas de los dispositivos conectados, sin importar la hora.</li>
-        <li><strong>kW Max (Demanda):</strong> Mayor energía acumulada en una hora (aproximación del kW promedio).</li>
+        <li><strong>Energía (kWh):</strong> Suma de las lecturas del inicio de cada hora de los dispositivos conectados, sin importar el horario tarifario.</li>
+        <li><strong>kW Max (Demanda):</strong> Mayor lectura horaria del mes (aproximación del kW promedio).</li>
         <li><strong>kVArh / F.P.:</strong> No se mide; el factor de potencia es un supuesto editable.</li>
       </ul>`
     },

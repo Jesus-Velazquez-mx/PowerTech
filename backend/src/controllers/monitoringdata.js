@@ -179,8 +179,15 @@ function obtenerDatosRecibo(req, res) {
     const finMes = fecha(new Date(anio, mes, 1));
     const inicioHistorial = fecha(new Date(anio, mes - 6, 1));
 
-    const joins = `
+    // Para la estimación solo se usa la primera lectura de cada hora por sensor (ej. 5:00, 6:00, 7:00...)
+    const joins = (desde, hasta) => `
         FROM LECTURAS l
+        INNER JOIN (
+            SELECT codigoSensor, MIN(fechaHora) as fechaHora
+            FROM LECTURAS
+            WHERE fechaHora >= '${desde}' AND fechaHora < '${hasta}'
+            GROUP BY codigoSensor, DATE(fechaHora), HOUR(fechaHora)
+        ) lh on lh.codigoSensor = l.codigoSensor AND lh.fechaHora = l.fechaHora
         INNER JOIN SENSORES s on s.codigoSensor = l.codigoSensor
         INNER JOIN DISPOSITIVOS d on d.codigoDispositivo = s.codigoDispositivo
         INNER JOIN SALAS sa on sa.codigoSala = d.codigoSala
@@ -193,13 +200,12 @@ function obtenerDatosRecibo(req, res) {
             SUM(CASE WHEN ${periodo} = 'P' THEN l.valor ELSE 0 END) as punta,
             SUM(l.valor) as total,
             MAX(l.fechahora) as ultimaLectura
-        ${joins}
-            AND l.fechahora >= '${inicioMes}' AND l.fechahora < '${finMes}'
+        ${joins(inicioMes, finMes)}
         GROUP BY d.codigoDispositivo, d.nombre
         ORDER BY total DESC;
     `;
 
-    // La demanda se estima como el kWh acumulado en cada hora (= kW promedio de esa hora)
+    // La demanda se estima como el kWh registrado en cada hora (= kW promedio de esa hora)
     const sqlHistorial = `
         SELECT YEAR(h.dia) as anio, MONTH(h.dia) as mes,
             SUM(h.base) as base, SUM(h.intermedio) as intermedio, SUM(h.punta) as punta,
@@ -213,8 +219,7 @@ function obtenerDatosRecibo(req, res) {
                 SUM(CASE WHEN ${periodo} = 'I' THEN l.valor ELSE 0 END) as intermedio,
                 SUM(CASE WHEN ${periodo} = 'P' THEN l.valor ELSE 0 END) as punta,
                 MAX(${periodo}) as periodo
-            ${joins}
-                AND l.fechahora >= '${inicioHistorial}' AND l.fechahora < '${finMes}'
+            ${joins(inicioHistorial, finMes)}
             GROUP BY DATE(l.fechahora), HOUR(l.fechahora)
         ) h
         GROUP BY YEAR(h.dia), MONTH(h.dia)
