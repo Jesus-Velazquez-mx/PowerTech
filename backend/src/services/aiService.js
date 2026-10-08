@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // =============================================================
 async function generarConsejoAhorro(datosEdificio) {
   // Elegimos el modelo (flash es más rápido y barato/gratis)
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
     Actúa como un asesor de energía inteligente para la empresa PowerTech.
@@ -46,38 +46,47 @@ async function obtenerConsejoPowerBot(consulta) {
       GROUP BY e.codigoEdificio, e.nombreEdificio;
     `;
 
-  const [rows] = await connection.promise().query(sql);
+  // Si la BD falla (ej. ETIMEDOUT con RDS), PowerBot responde igual sin datos
+  try {
+    const [rows] = await connection.promise().query(sql);
 
-  // --- LOG PARA CLION/CONSOLA ---
-  console.log(`\n--- [DEBUG] Reporte PowerTech ---`);
-  if (rows.length > 0) {
-    console.table(rows);
-    contextoConsumo = rows.map(r => {
-      const num = Number(r.total_kWh);
-      return `- **${r.nombreEdificio}**: ${num.toFixed(2)} kWh (${r.alertas} alertas activas).`;
-    }).join('\n');
+    // --- LOG PARA CLION/CONSOLA ---
+    console.log(`\n--- [DEBUG] Reporte PowerTech ---`);
+    if (rows.length > 0) {
+      console.table(rows);
+      contextoConsumo = rows.map(r => {
+        const num = Number(r.total_kWh);
+        return `- ${r.nombreEdificio}: ${num.toFixed(2)} kWh este mes, ${r.alertas} alertas activas.`;
+      }).join('\n');
+    }
+    console.log("----------------------------------\n");
+  } catch (error) {
+    console.error('PowerBot: no se pudieron obtener datos de la BD:', error.message);
+    contextoConsumo = "No se pudo consultar la base de datos en este momento. Avisa al usuario que los datos en vivo no están disponibles.";
   }
-  console.log("----------------------------------\n");
 
-  // Configuramos el modelo para el PowerBot
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const fecha = new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
 
-  const prompt = `
-      Actúa como PowerBot, el asistente inteligente de PowerTech.
-      
-      ESTADO ACTUAL DE LA INFRAESTRUCTURA:
+  // Las reglas van como instrucción de sistema para que el texto del usuario no las sobrescriba
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: `
+      Eres PowerBot, el asistente inteligente de PowerTech, una plataforma de monitoreo energético de edificios.
+      Responde siempre en español.
+
+      ESTADO DE LA INFRAESTRUCTURA (${fecha}):
       ${contextoConsumo}
-      
-      CONSULTA DEL USUARIO:
-      "${consulta}"
-      
-      REGLAS DE RESPUESTA:
-      1. Usa Markdown: Negritas para datos importantes y listas para edificios.
-      2. Sé técnico pero muy breve (máximo 4 líneas).
-      3. Si hay alertas, recomienda revisar los sensores de ese edificio.
-    `;
 
-  const aiResponse = await model.generateContent(prompt);
+      REGLAS DE RESPUESTA:
+      1. Usa Markdown: negritas para datos importantes y listas para edificios.
+      2. Sé técnico pero muy breve (máximo 4 líneas).
+      3. Si un edificio tiene alertas activas, recomienda revisar sus sensores.
+      4. Usa solo los datos de arriba; no inventes cifras ni edificios.
+      5. Si la pregunta no tiene relación con energía o PowerTech, indícalo amablemente y redirige la conversación.
+    `
+  });
+
+  const aiResponse = await model.generateContent(String(consulta).trim().slice(0, 1000));
   return aiResponse.response.text();
 }
 
