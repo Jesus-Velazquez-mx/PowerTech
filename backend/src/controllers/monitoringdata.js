@@ -30,11 +30,11 @@ function obtenerFechasDisponibles(req, res) {
         const { id } = req.params;
         let sql = `
             SELECT DISTINCT month(l.fechahora) as mes, year(l.fechahora) as anio 
-            FROM lecturas L
-            INNER JOIN Sensores S on S.codigoSensor = L.codigosensor
-            INNER JOIN Dispositivos D on D.codigodispositivo = S.codigodispositivo
-            INNER JOIN Salas Sa on Sa.codigoSala = D.codigoSala
-            WHERE sa.codigoedificio = ${connection.escape(id)}
+            FROM LECTURAS l
+            INNER JOIN SENSORES s on s.codigoSensor = l.codigoSensor
+            INNER JOIN DISPOSITIVOS d on d.codigoDispositivo = s.codigoDispositivo
+            INNER JOIN SALAS sa on sa.codigoSala = d.codigoSala
+            WHERE sa.codigoEdificio = ${connection.escape(id)}
             ORDER BY anio DESC, mes DESC;
         `;
         connection.query(sql, (err, rows) => {
@@ -57,11 +57,11 @@ function obtenerMonitoreoMensual(req, res) {
 
         let sql = `
             SELECT sum(l.valor) as total 
-            FROM lecturas L
-            INNER JOIN Sensores S on S.codigoSensor = L.codigosensor
-            INNER JOIN Dispositivos D on D.codigodispositivo = S.codigodispositivo
-            INNER JOIN Salas Sa on Sa.codigoSala = D.codigoSala
-            WHERE sa.codigoedificio = ${connection.escape(id)} AND ${filterDate} ${timeFilterSQL};
+            FROM LECTURAS l
+            INNER JOIN SENSORES s on s.codigoSensor = l.codigoSensor
+            INNER JOIN DISPOSITIVOS d on d.codigoDispositivo = s.codigoDispositivo
+            INNER JOIN SALAS sa on sa.codigoSala = d.codigoSala
+            WHERE sa.codigoEdificio = ${connection.escape(id)} AND ${filterDate} ${timeFilterSQL};
         `;
 
         connection.query(sql, (err, rows) => {
@@ -83,13 +83,13 @@ function obtenerDesgloseDispositivos(req, res) {
             : `month(l.fechahora) = month(curdate()) AND year(l.fechahora) = year(curdate())`;
 
         let sql = `
-            SELECT D.nombre as nombre_dispositivo, sum(l.valor) as total_valor 
-            FROM lecturas L
-            INNER JOIN Sensores S on S.codigoSensor = L.codigosensor
-            INNER JOIN Dispositivos D on D.codigodispositivo = S.codigodispositivo
-            INNER JOIN Salas Sa on Sa.codigoSala = D.codigoSala
-            WHERE sa.codigoedificio = ${connection.escape(id)} AND ${filterDate} ${timeFilterSQL}
-            GROUP BY D.codigodispositivo
+            SELECT d.nombre as nombre_dispositivo, sum(l.valor) as total_valor 
+            FROM LECTURAS l
+            INNER JOIN SENSORES s on s.codigoSensor = l.codigoSensor
+            INNER JOIN DISPOSITIVOS d on d.codigoDispositivo = s.codigoDispositivo
+            INNER JOIN SALAS sa on sa.codigoSala = d.codigoSala
+            WHERE sa.codigoEdificio = ${connection.escape(id)} AND ${filterDate} ${timeFilterSQL}
+            GROUP BY d.codigoDispositivo
             ORDER BY total_valor DESC;
         `;
 
@@ -127,11 +127,11 @@ function obtenerHistorialGrafica(req, res) {
 
         let sql = `
             SELECT ${selectClause}, sum(l.valor) as total_valor 
-            FROM lecturas L
-            INNER JOIN Sensores S on S.codigoSensor = L.codigosensor
-            INNER JOIN Dispositivos D on D.codigodispositivo = S.codigodispositivo
-            INNER JOIN Salas Sa on Sa.codigoSala = D.codigoSala
-            WHERE sa.codigoedificio = ${connection.escape(id)} AND ${filterDate} ${timeFilterSQL}
+            FROM LECTURAS l
+            INNER JOIN SENSORES s on s.codigoSensor = l.codigoSensor
+            INNER JOIN DISPOSITIVOS d on d.codigoDispositivo = s.codigoDispositivo
+            INNER JOIN SALAS sa on sa.codigoSala = d.codigoSala
+            WHERE sa.codigoEdificio = ${connection.escape(id)} AND ${filterDate} ${timeFilterSQL}
             GROUP BY ${groupClause}
             ORDER BY etiqueta ASC;
         `;
@@ -180,14 +180,14 @@ function obtenerDatosRecibo(req, res) {
     const inicioHistorial = fecha(new Date(anio, mes - 6, 1));
 
     const joins = `
-        FROM lecturas L
-        INNER JOIN Sensores S on S.codigoSensor = L.codigosensor
-        INNER JOIN Dispositivos D on D.codigodispositivo = S.codigodispositivo
-        INNER JOIN Salas Sa on Sa.codigoSala = D.codigoSala
-        WHERE sa.codigoedificio = ${connection.escape(id)}`;
+        FROM LECTURAS l
+        INNER JOIN SENSORES s on s.codigoSensor = l.codigoSensor
+        INNER JOIN DISPOSITIVOS d on d.codigoDispositivo = s.codigoDispositivo
+        INNER JOIN SALAS sa on sa.codigoSala = d.codigoSala
+        WHERE sa.codigoEdificio = ${connection.escape(id)}`;
 
     const sqlDispositivos = `
-        SELECT D.codigoDispositivo as codigo, D.nombre as nombre,
+        SELECT d.codigoDispositivo as codigo, d.nombre as nombre,
             SUM(CASE WHEN ${periodo} = 'B' THEN l.valor ELSE 0 END) as base,
             SUM(CASE WHEN ${periodo} = 'I' THEN l.valor ELSE 0 END) as intermedio,
             SUM(CASE WHEN ${periodo} = 'P' THEN l.valor ELSE 0 END) as punta,
@@ -195,7 +195,7 @@ function obtenerDatosRecibo(req, res) {
             MAX(l.fechahora) as ultimaLectura
         ${joins}
             AND l.fechahora >= '${inicioMes}' AND l.fechahora < '${finMes}'
-        GROUP BY D.codigoDispositivo, D.nombre
+        GROUP BY d.codigoDispositivo, d.nombre
         ORDER BY total DESC;
     `;
 
