@@ -1,24 +1,30 @@
 // Cálculo ESTIMADO del recibo de CFE para tarifas de Media Tensión (GDMTH / GDMTO).
-// Las cuotas son valores de REFERENCIA: CFE las publica cada mes y varían por división tarifaria.
-// Actualízalas desde https://app.cfe.mx/Aplicaciones/CCFE/Tarifas/TarifasCREEmpresa/Tarifas/
+// Cuotas oficiales de CFE para OCTUBRE 2026, división tarifaria NOROESTE (Culiacán, Sinaloa).
+// CFE las publica cada mes; actualízalas desde:
+//   GDMTH: https://app.cfe.mx/Aplicaciones/CCFE/Tarifas/TarifasCREIndustria/Tarifas/GranDemandaMTH.aspx
+//   GDMTO: https://app.cfe.mx/Aplicaciones/CCFE/Tarifas/TarifasCREIndustria/Tarifas/GranDemandaMTO.aspx
+// Las cuotas publicadas ya integran Transmisión, CENACE, Suministrador y SCnMEM,
+// por eso esos cargos van en 0 y no se suman aparte.
+
+export const PERIODO_TARIFAS = 'Octubre 2026 · División Noroeste';
 
 export const TARIFAS_REFERENCIA = {
     GDMTH: {
-        suministro: 520.00,       // $/mes
-        distribucion: 98.50,      // $/kW
-        transmision: 0.0974,      // $/kWh
-        cenace: 0.0113,           // $/kWh
-        capacidad: 362.40,        // $/kW
-        generacion: { Base: 1.1385, Intermedio: 1.9364, Punta: 2.2490 }, // $/kWh
+        suministro: 197.77,       // $/mes (cargo fijo)
+        distribucion: 90.85,      // $/kW
+        transmision: 0,           // incluido en las cuotas de energía
+        cenace: 0,                // incluido en las cuotas de energía
+        capacidad: 377.17,        // $/kW
+        generacion: { Base: 0.9408, Intermedio: 1.5035, Punta: 1.6658 }, // $/kWh
         factorCarga: 0.57
     },
     GDMTO: {
-        suministro: 520.00,
-        distribucion: 104.20,
-        transmision: 0.0974,
-        cenace: 0.0113,
-        capacidad: 372.10,
-        generacion: 1.6847,
+        suministro: 197.77,
+        distribucion: 90.85,
+        transmision: 0,
+        cenace: 0,
+        capacidad: 327.96,
+        generacion: 1.2610,
         factorCarga: 0.55
     }
 };

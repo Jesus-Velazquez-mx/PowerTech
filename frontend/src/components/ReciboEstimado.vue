@@ -13,7 +13,7 @@
                 Los montos se calculan con una lectura por hora (la del inicio de cada hora) de los dispositivos conectados,
                 <template v-if="reporte.ultimaLectura">hasta el {{ formatoFechaHora(reporte.ultimaLectura) }}</template>
                 <template v-else>hasta el momento</template>
-                y con cuotas de referencia. El importe que emita CFE puede variar por lecturas pendientes, la
+                y con las cuotas publicadas por CFE ({{ PERIODO_TARIFAS }}). El importe que emita CFE puede variar por lecturas pendientes, la
                 actualización mensual de tarifas, el factor de potencia real medido, el DAP de tu municipio y otros
                 ajustes.
             </div>
@@ -21,8 +21,8 @@
 
         <div class="cfe-disclaimer">
             <strong>Aviso de Autoría:</strong> La estructura del recibo, definiciones y fórmulas de cálculo son
-            propiedad de la <strong>Comisión Federal de Electricidad (CFE)</strong>. Las cuotas usadas son valores de
-            referencia para Media Tensión.
+            propiedad de la <strong>Comisión Federal de Electricidad (CFE)</strong>. Cuotas oficiales de Media Tensión:
+            <strong>{{ PERIODO_TARIFAS }}</strong>.
         </div>
 
         <!-- Controles -->
@@ -178,8 +178,8 @@
                             <p class="mock-line">Suministro <span>{{ dinero(cargos.suministro) }}</span></p>
                             <p class="mock-line">Distribución ({{ kw(reporte.recibo.kwDistribucion) }})
                                 <span>{{ dinero(cargos.distribucion) }}</span></p>
-                            <p class="mock-line">Transmisión <span>{{ dinero(cargos.transmision) }}</span></p>
-                            <p class="mock-line">CENACE <span>{{ dinero(cargos.cenace) }}</span></p>
+                            <p class="mock-line">Transmisión <span>{{ cargos.transmision ? dinero(cargos.transmision) : 'Incluido en Energía' }}</span></p>
+                            <p class="mock-line">CENACE <span>{{ cargos.cenace ? dinero(cargos.cenace) : 'Incluido en Energía' }}</span></p>
                             <p class="mock-line">Generación (Energía) <span>{{ dinero(cargos.generacion) }}</span></p>
                             <template v-if="reporte.recibo.generacionPorNivel">
                                 <p v-for="nivel in NIVELES" :key="nivel" class="mock-line sub-line">
@@ -325,7 +325,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { NIVELES, FP_LIMITE } from '@/utils/reciboCFE'
+import { NIVELES, FP_LIMITE, PERIODO_TARIFAS } from '@/utils/reciboCFE'
 
 const props = defineProps({
     reporte: { type: Object, required: true },
@@ -398,9 +398,9 @@ const infoData = computed(() => ({
       <ul>
         <li><strong>Distribución:</strong> $/kW × el menor entre la demanda máxima y kWh / (24 × días × factor de carga).</li>
         <li><strong>Capacidad:</strong> $/kW × demanda ${props.reporte.tarifa === 'GDMTH' ? 'en Punta (menor entre la demanda en Punta y kWh Punta / (horas Punta × días × factor de carga))' : 'facturable'}.</li>
-        <li><strong>Transmisión y CENACE:</strong> $/kWh × energía total.</li>
+        <li><strong>Transmisión y CENACE:</strong> CFE ya los integra en las cuotas de energía publicadas, por eso no se suman aparte.</li>
         <li><strong>Generación:</strong> ${props.reporte.tarifa === 'GDMTH' ? 'Cada kWh se cobra con la cuota de su periodo (Base, Intermedia o Punta).' : 'Cuota única $/kWh para toda la energía.'}</li>
-        <li>Las cuotas son de referencia y deben actualizarse con las publicadas por CFE cada mes.</li>
+        <li>Cuotas oficiales de CFE (${PERIODO_TARIFAS}). Se publican cada mes y deben actualizarse.</li>
       </ul>`
     },
     desglose: {
