@@ -1,9 +1,19 @@
 const connection = require('../config/connection');
 
+const HORA_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// Convierte "HH:MM-HH:MM,HH:MM-HH:MM" en pares [inicio, fin] válidos (descarta lo que no sea hora)
+function parseRangos(rangosParam) {
+    if (!rangosParam) return [];
+    return String(rangosParam).split(',')
+        .map(r => r.split('-'))
+        .filter(([inicio, fin]) => HORA_RE.test(inicio) && HORA_RE.test(fin));
+}
+
 // Función auxiliar para construir el filtro de tiempo SQL
 function buildTimeFilter(rangosParam) {
-    if (!rangosParam) return "";
-    const rangos = rangosParam.split(',');
+    const rangos = parseRangos(rangosParam).map(r => r.join('-'));
+    if (rangos.length === 0) return "";
     const conditions = rangos.map(r => {
         let [inicio, fin] = r.split('-');
         // Aseguramos formato HH:MM:SS para la base de datos
@@ -133,9 +143,97 @@ function obtenerHistorialGrafica(req, res) {
     }
 }
 
+// Condición SQL para saber si una hora cae en alguno de los bloques (intervalos semiabiertos [inicio, fin))
+function condicionHorario(rangos, col = 'TIME(l.fechahora)') {
+    if (rangos.length === 0) return 'FALSE';
+    const conds = rangos.map(([inicio, fin]) => {
+        const ini = `${inicio}:00`;
+        const f = fin === '23:59' ? '24:00:00' : `${fin}:00`;
+        // Si el bloque cruza la medianoche (ej. 22:00 a 02:00)
+        return (inicio < fin || fin === '23:59')
+            ? `(${col} >= '${ini}' AND ${col} < '${f}')`
+            : `(${col} >= '${ini}' OR ${col} < '${f}')`;
+    });
+    return `(${conds.join(' OR ')})`;
+}
+
+// 5. DATOS PARA EL RECIBO ESTIMADO (consumo por periodo tarifario, por dispositivo y demanda máxima)
+function obtenerDatosRecibo(req, res) {
+    if (!connection) return;
+    const { id } = req.params;
+    const mes = parseInt(req.query.mes, 10);
+    const anio = parseInt(req.query.anio, 10);
+    if (!mes || !anio || mes < 1 || mes > 12) {
+        return res.status(400).json({ error: true, message: 'Parámetros mes y anio requeridos' });
+    }
+
+    const punta = condicionHorario(parseRangos(req.query.punta));
+    const intermedio = condicionHorario(parseRangos(req.query.intermedio));
+    const base = condicionHorario(parseRangos(req.query.base));
+    // Prioridad: Punta > Intermedio > Base; lo que no caiga en ningún bloque se considera Base
+    const periodo = `CASE WHEN ${punta} THEN 'P' WHEN ${intermedio} THEN 'I' WHEN ${base} THEN 'B' ELSE 'B' END`;
+
+    const pad = n => String(n).padStart(2, '0');
+    const fecha = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
+    const inicioMes = fecha(new Date(anio, mes - 1, 1));
+    const finMes = fecha(new Date(anio, mes, 1));
+    const inicioHistorial = fecha(new Date(anio, mes - 6, 1));
+
+    const joins = `
+        FROM lecturas L
+        INNER JOIN Sensores S on S.codigoSensor = L.codigosensor
+        INNER JOIN Dispositivos D on D.codigodispositivo = S.codigodispositivo
+        INNER JOIN Salas Sa on Sa.codigoSala = D.codigoSala
+        WHERE sa.codigoedificio = ${connection.escape(id)}`;
+
+    const sqlDispositivos = `
+        SELECT D.codigoDispositivo as codigo, D.nombre as nombre,
+            SUM(CASE WHEN ${periodo} = 'B' THEN l.valor ELSE 0 END) as base,
+            SUM(CASE WHEN ${periodo} = 'I' THEN l.valor ELSE 0 END) as intermedio,
+            SUM(CASE WHEN ${periodo} = 'P' THEN l.valor ELSE 0 END) as punta,
+            SUM(l.valor) as total,
+            MAX(l.fechahora) as ultimaLectura
+        ${joins}
+            AND l.fechahora >= '${inicioMes}' AND l.fechahora < '${finMes}'
+        GROUP BY D.codigoDispositivo, D.nombre
+        ORDER BY total DESC;
+    `;
+
+    // La demanda se estima como el kWh acumulado en cada hora (= kW promedio de esa hora)
+    const sqlHistorial = `
+        SELECT YEAR(h.dia) as anio, MONTH(h.dia) as mes,
+            SUM(h.base) as base, SUM(h.intermedio) as intermedio, SUM(h.punta) as punta,
+            SUM(h.kwh) as total,
+            MAX(h.kwh) as demandaMax,
+            MAX(CASE WHEN h.periodo = 'P' THEN h.kwh ELSE 0 END) as demandaPunta
+        FROM (
+            SELECT DATE(l.fechahora) as dia, HOUR(l.fechahora) as hora,
+                SUM(l.valor) as kwh,
+                SUM(CASE WHEN ${periodo} = 'B' THEN l.valor ELSE 0 END) as base,
+                SUM(CASE WHEN ${periodo} = 'I' THEN l.valor ELSE 0 END) as intermedio,
+                SUM(CASE WHEN ${periodo} = 'P' THEN l.valor ELSE 0 END) as punta,
+                MAX(${periodo}) as periodo
+            ${joins}
+                AND l.fechahora >= '${inicioHistorial}' AND l.fechahora < '${finMes}'
+            GROUP BY DATE(l.fechahora), HOUR(l.fechahora)
+        ) h
+        GROUP BY YEAR(h.dia), MONTH(h.dia)
+        ORDER BY anio ASC, mes ASC;
+    `;
+
+    connection.query(sqlDispositivos, (err, dispositivos) => {
+        if (err) return res.status(500).json(err);
+        connection.query(sqlHistorial, (err2, historial) => {
+            if (err2) return res.status(500).json(err2);
+            res.json({ error: false, data: { dispositivos, historial } });
+        });
+    });
+}
+
 module.exports = {
     obtenerFechasDisponibles,
     obtenerMonitoreoMensual,
     obtenerDesgloseDispositivos,
-    obtenerHistorialGrafica
+    obtenerHistorialGrafica,
+    obtenerDatosRecibo
 };

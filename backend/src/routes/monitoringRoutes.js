@@ -13,4 +13,7 @@ router.get('/general/:id', monitoringdata.obtenerMonitoreoMensual);
 // Ruta general para el desglose de todos los dispositivos (reemplaza a /comp y /aire)
 router.get('/devices/:id', monitoringdata.obtenerDesgloseDispositivos);
 router.get('/chart/:id', monitoringdata.obtenerHistorialGrafica);
+
+// Datos para el recibo estimado (GDMTH / GDMTO) del periodo en curso
+router.get('/recibo/:id', monitoringdata.obtenerDatosRecibo);
 module.exports = router;

@@ -91,6 +91,38 @@
         </v-card>
       </div>
 
+      <!-- SECCIÓN: Costo estimado (recibo preliminar) -->
+      <v-card class="rounded-xl pa-5 mb-4 elevation-1 border-light">
+        <div class="d-flex justify-space-between align-start">
+          <div>
+            <span class="text-subtitle-1 text-grey-darken-1 d-block">Costo estimado hasta el momento</span>
+            <v-progress-circular v-if="loadingRecibo" indeterminate color="green" size="24"
+              class="my-2"></v-progress-circular>
+            <span v-else class="text-h4 font-weight-bold text-green-darken-3">{{ formatoDinero(reporteRecibo?.recibo.total)
+              }}</span>
+            <span v-if="reporteRecibo?.esParcial" class="text-caption text-grey-darken-1 d-block">
+              Proyección al cierre del mes: <b>{{ formatoDinero(reporteRecibo.proyeccion.total) }}</b>
+            </span>
+          </div>
+          <v-chip color="amber-darken-3" variant="tonal" size="small" class="font-weight-bold">ESTIMADO</v-chip>
+        </div>
+        <div class="text-caption text-amber-darken-4 mt-2">
+          <v-icon size="small">mdi-alert-outline</v-icon>
+          No son los datos finales del recibo de CFE; es una estimación con las lecturas registradas hasta ahora.
+        </div>
+        <v-btn block rounded="xl" color="green-darken-3" variant="flat" class="mt-4" prepend-icon="mdi-receipt-text"
+          :disabled="!reporteRecibo" @click="dialogRecibo = true">
+          Ver recibo estimado {{ tarifaSeleccionada }}
+        </v-btn>
+      </v-card>
+
+      <v-dialog v-model="dialogRecibo" max-width="1200" scrollable :fullscreen="smAndDown">
+        <v-card v-if="reporteRecibo" class="rounded-xl">
+          <ReciboEstimado :reporte="reporteRecibo" :edificio="edificioActual" v-model:fp="factorPotencia"
+            @cerrar="dialogRecibo = false" />
+        </v-card>
+      </v-dialog>
+
       <!-- SECCIÓN: Consumo total y Gráfica Real -->
       <v-card class="rounded-xl pa-5 mb-4 elevation-1 border-light">
         <div class="d-flex justify-space-between align-start mb-4">
@@ -174,6 +206,11 @@ import axios from 'axios';
 import { storeToRefs } from 'pinia';
 import { useBuildingStore } from '@/stores/buildings';
 import { useUserStore } from '@/stores/users';
+import { useDisplay } from 'vuetify';
+import ReciboEstimado from '@/components/ReciboEstimado.vue';
+import { construirReporte } from '@/utils/reciboCFE';
+
+const { smAndDown } = useDisplay();
 
 const buildingStore = useBuildingStore();
 const userStore = useUserStore();
@@ -249,10 +286,57 @@ const consumoTotal = ref(0);
 const dispositivosCrudos = ref([]);
 const coloresDispositivos = ['blue', 'cyan', 'indigo', 'teal', 'purple'];
 
-const nombreEdificioMostrado = computed(() => {
-  const edif = edificios.value.find(e => e.codigoEdificio === edificioSeleccionado.value);
-  return edif ? edif.nombreEdificio : edificioSeleccionado.value;
+const edificioActual = computed(() => edificios.value.find(e => e.codigoEdificio === edificioSeleccionado.value) || null);
+
+const nombreEdificioMostrado = computed(() => edificioActual.value?.nombreEdificio || edificioSeleccionado.value);
+
+// --- Recibo estimado ---
+const datosRecibo = ref(null);
+const loadingRecibo = ref(false);
+const dialogRecibo = ref(false);
+const factorPotencia = ref(90);
+
+const reporteRecibo = computed(() => {
+  if (!datosRecibo.value || !mesSeleccionado.value || !anioSeleccionado.value) return null;
+  return construirReporte(datosRecibo.value, {
+    tarifa: tarifaSeleccionada.value,
+    horarios: horariosActuales.value,
+    mes: mesSeleccionado.value,
+    anio: anioSeleccionado.value,
+    fp: factorPotencia.value
+  });
 });
+
+const formatoDinero = v => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v || 0);
+
+const rangosDeNivel = nivel => {
+  const horario = horariosActuales.value.find(h => h.nivel === nivel);
+  return horario ? horario.bloques.map(b => `${b.inicio}-${b.fin}`).join(',') : '';
+};
+
+let peticionRecibo = 0;
+const cargarRecibo = async () => {
+  if (!edificioSeleccionado.value || !mesSeleccionado.value || !anioSeleccionado.value) return;
+  const peticion = ++peticionRecibo;
+  loadingRecibo.value = true;
+  try {
+    const res = await axios.get(`/monitoring/recibo/${edificioSeleccionado.value}`, {
+      params: {
+        mes: mesSeleccionado.value,
+        anio: anioSeleccionado.value,
+        base: rangosDeNivel('Base'),
+        intermedio: rangosDeNivel('Intermedio'),
+        punta: rangosDeNivel('Punta')
+      }
+    });
+    if (peticion === peticionRecibo) datosRecibo.value = res.data.data;
+  } catch (error) {
+    console.error("Error cargando recibo estimado:", error);
+    if (peticion === peticionRecibo) datosRecibo.value = null;
+  } finally {
+    if (peticion === peticionRecibo) loadingRecibo.value = false;
+  }
+};
 
 const desgloseDispositivos = computed(() => {
   if (consumoTotal.value === 0 || dispositivosCrudos.value.length === 0) return [];
@@ -372,12 +456,13 @@ onMounted(() => {
 watch(edificioSeleccionado, cargarFechasDisponibles);
 watch([mesSeleccionado, anioSeleccionado, nivelSeleccionado, tarifaSeleccionada], cargarDatos);
 watch(periodoSeleccionado, cargarGrafica);
+watch([edificioSeleccionado, mesSeleccionado, anioSeleccionado, tarifaSeleccionada], cargarRecibo);
 
-// Si el usuario termina de editar horarios y no está en 'General', recargamos con las nuevas horas
+// Si el usuario termina de editar horarios, recargamos con las nuevas horas
 watch(editandoHorarios, (nuevoValor) => {
-  if (!nuevoValor && nivelSeleccionado.value !== 'General') {
-    cargarDatos();
-  }
+  if (nuevoValor) return;
+  if (nivelSeleccionado.value !== 'General') cargarDatos();
+  cargarRecibo();
 });
 </script>
 
